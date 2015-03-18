@@ -1,12 +1,9 @@
 include:
   - nginx
+  - docker
 
-# get rid of legacy config
-/etc/nginx/conf.d/demo.conf:
-  file.absent
-
-{% for app, appdata in salt['pillar.get']('docker_envs', {}).items() %}
-/etc/nginx/conf.d/{{app}}.conf:
+{% for server_name, appdata in salt['pillar.get']('docker_envs', {}).items() %}
+/etc/nginx/conf.d/{{server_name}}.conf:
   file.managed:
     - source: salt://apps/templates/nginx_container.conf
     - user: root
@@ -14,19 +11,13 @@ include:
     - mode: 644
     - template: jinja
     - context:
-      app: {{app}}
-      appdata: {{appdata | yaml}}
+      server_name: {{server_name}}
+      appdata: {{appdata}}
     - watch_in:
       - service: nginx
 
-{% if 'type' in appdata.keys() and appdata['type']=='standalone' %}
-  {% set container_types = ['standalone'] %}
-{% else %}
-  {% set container_types = ['rails', 'assets'] %}
-{% endif %}
-
-{% for container_type in container_types %} # Start container type loop
-/etc/init/{{app}}_{{container_type}}_container.conf:
+{% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
+/etc/init/{{container}}_container.conf:
   file.managed:
     - user: root
     - group: root
@@ -34,16 +25,17 @@ include:
     - source: salt://apps/templates/upstart_container.conf
     - template: jinja
     - context:
-      app: {{app}}
-      container_type: {{container_type}}
-      docker_registry: {{ salt['pillar.get']('docker_registry', '') }}
-      tag: {{ salt['grains.get']('%s_tag' % app , 'latest') }}
+      cdata: {{cdata}}
+      cname: {{container}}
+      default_registry: {{ salt['pillar.get']('default_registry', '') }}
+      tag: {{ salt['grains.get']('%s_tag' % container , 'latest') }}
 
-{{app}}_{{container_type}}_service:
+{{container}}_service:
   service.running:
-    - name: {{app}}_{{container_type}}_container
+    - name: {{container}}_container
     - enable: true
     - require:
-      - file: /etc/init/{{app}}_{{container_type}}_container.conf
-{% endfor %} # End container type loop
+      - file: /etc/init/{{container}}_container.conf
+      - file: /etc/docker_env.d/{{container}}
+{% endfor %} # End container loop
 {% endfor %} # End app loop
