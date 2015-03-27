@@ -17,7 +17,7 @@ def get_cf_data():
 
         conn = boto.cloudformation.connect_to_region(region)
         tags = get_ec2_data()
-        stack_name = "{0}-{1}".format(tags['Apps'], tags['Env'])
+        stack_name = tags['aws:cloudformation:stack-name']
         stack_outputs = conn.describe_stacks(stack_name)[0].outputs
         out = {}
         [out.update({o.key:o.value}) for o in stack_outputs]
