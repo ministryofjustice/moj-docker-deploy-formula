@@ -34,8 +34,9 @@ include:
   service.running:
     - name: {{container}}_container
     - enable: true
-    - require:
+    - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
+     
 {% endfor %} # End container loop
 {% endfor %} # End app loop
