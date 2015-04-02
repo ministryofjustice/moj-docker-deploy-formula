@@ -1,6 +1,7 @@
 include:
   - nginx
   - docker
+  - .environment
 
 {% for server_name, appdata in salt['pillar.get']('docker_envs', {}).items() %}
 /etc/nginx/conf.d/{{server_name}}.conf:
@@ -29,13 +30,15 @@ include:
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: {{ salt['grains.get']('%s_tag' % container , 'latest') }}
+      task: {{ salt['grains.get']('%s_task' % container , 'none') }}
 
 {{container}}_service:
   service.running:
     - name: {{container}}_container
     - enable: true
-    - require:
+    - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
+     
 {% endfor %} # End container loop
 {% endfor %} # End app loop
