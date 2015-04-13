@@ -1,2 +1,1 @@
 deploy ALL= NOPASSWD: /usr/local/bootstrap-cfn/bootstrap_cfn/salt_utils.py, /usr/bin/salt \* grains.setval*
-Defaults env_keep += "PYTHONPATH"
