@@ -3,6 +3,16 @@ include:
   - docker
   - .environment
 
+{% if salt['pillar.get']('registry_logins') %}
+/root/.dockercfg:
+  file.managed:
+    - source: salt://apps/templates/docker_logins.py
+    - template: py
+    - user: root
+    - group: root
+    - mode: 600
+{% endif %}
+
 {% for server_name, appdata in salt['pillar.get']('docker_envs', {}).items() %}
 /etc/nginx/conf.d/{{server_name}}.conf:
   file.managed:
