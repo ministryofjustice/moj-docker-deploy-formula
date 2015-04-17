@@ -4,9 +4,10 @@
 # in this case it returns json which is the intended contents of the file.
 import base64
 import json
+from copy import deepcopy
 
 def run():
-    docker_logins = salt['pillar.get']('registry_logins',{})
+    docker_logins = deepcopy(salt['pillar.get']('registry_logins',{}))
     for reg, login in docker_logins.items():
         user = login.pop('user')
         password = login.pop('password')
