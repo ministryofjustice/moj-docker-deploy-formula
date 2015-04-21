@@ -1,2 +1,5 @@
 # vim python-mode rope
 *.ropeproject
+*.pyc
+/vendor
+/venv
