@@ -1,1 +1,1 @@
-deploy ALL= NOPASSWD: /usr/local/bootstrap-salt/bootstrap_salt/salt_utils.py, /usr/bin/salt \* grains.setval*, /usr/bin/salt-call grains.item deployrole
+deploy ALL= NOPASSWD: /usr/local/bootstrap-salt/bootstrap_salt/salt_utils.py, /usr/bin/salt \* grains.setval*, /usr/bin/salt-call grains.item deployrole --out=json
