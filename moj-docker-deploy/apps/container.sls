@@ -49,6 +49,25 @@ include:
     - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
+
+{% for elb in salt['pillar.get']('elb',[]) %}
+{{ container }}_{{ elb['name'] }}_down:
+  elb_reg.instance_down:
+    - name: ELB-{{ elb['name'] }}
+    - instance: {{ salt['grains.get']('aws_instance_id', []) }}
+    - timeout: 120
+    - prereq:
+      - file: /etc/init/{{container}}_container.conf
+      - file: /etc/docker_env.d/{{container}}
+
+{{ container }}_{{ elb['name'] }}_up:
+  elb_reg.instance_up:
+    - name: ELB-{{ elb['name'] }}
+    - instance: {{ salt['grains.get']('aws_instance_id', []) }}
+    - timeout: 120
+    - watch:
+      - service: {{ container }}_service
+{% endfor %}
      
 {% endfor %} # End container loop
 {% endfor %} # End app loop
