@@ -5,7 +5,10 @@ import os
 import sys
 import boto.ec2
 import boto.cloudformation
+from boto.exception import BotoServerError
 import urllib2
+import time
+import random
 
 def get_aws_metadata():
     metadata_ip = '169.254.169.254'
@@ -17,9 +20,9 @@ def get_aws_metadata():
         return {'aws_instance_id': instance_id, 'aws_region': region}
     except Exception as err:
         sys.stderr.write('tags_to_grains ERROR: %s\n' % str(err))
-        sys.exit(2)
+        return {'custom_grain_error': True}
 
-def get_cf_data():
+def get_cf_data(attempt=0):
     try:
         md = get_aws_metadata()
         conn = boto.cloudformation.connect_to_region(md['aws_region'])
@@ -29,12 +32,17 @@ def get_cf_data():
         out = {}
         [out.update({o.key:o.value}) for o in stack_outputs]
         return out
-
+    except BotoServerError:
+        if attempt > 5:
+            return {'custom_grain_error': True}
+        time.sleep(random.randint(1,5))
+        attempt = attempt + 1
+        return get_cf_data(attempt)
     except Exception as err:
         sys.stderr.write('tags_to_grains ERROR: %s\n' % str(err))
-        sys.exit(2)
+        return {'custom_grain_error': True}
 
-def get_ec2_data():
+def get_ec2_data(attempt=0):
     """
     This retrieves ec2 data for the instance e.g
     Project: courtfinder
@@ -52,10 +60,15 @@ def get_ec2_data():
         instance = conn.get_all_instances(
             instance_ids=[md['aws_instance_id']])[0].instances[0]
         return instance.tags
-
+    except BotoServerError:
+        if attempt > 5:
+            return {'custom_grain_error': True}
+        time.sleep(random.randint(1,5))
+        attempt = attempt + 1
+        return get_ec2_data(attempt)
     except Exception as err:
         sys.stderr.write('tags_to_grains ERROR: %s\n' % str(err))
-        sys.exit(2)
+        return {'custom_grain_error': True}
 
 if __name__ == '__main__':
     print get_ec2_data()
