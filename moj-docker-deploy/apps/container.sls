@@ -49,6 +49,32 @@ include:
     - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
+
+{% if salt['grains.get']('zero_downtime_deploy', False) %}
+{% for elb in salt['pillar.get']('elb',[]) %}
+{{ container }}_{{ elb['name'] }}_down:
+  elb_reg.instance_deregistered:
+    - name: ELB-{{ elb['name'] }}
+    - instance: {{ salt['grains.get']('aws_instance_id', []) }}
+    - timeout: 130
+    - prereq:
+      # This prereq means that this state will trigger before the
+      # following files change (and only if they do change).
+      # As changes to these files also mean a restart of the container
+      - file: /etc/init/{{container}}_container.conf
+      - file: /etc/docker_env.d/{{container}}
+
+{{ container }}_{{ elb['name'] }}_up:
+  elb_reg.instance_registered:
+    - name: ELB-{{ elb['name'] }}
+    - instance: {{ salt['grains.get']('aws_instance_id', []) }}
+    - timeout: 120
+    - watch:
+      # Once the container service has restarted, make sure we
+      # are registered in the ELB.
+      - service: {{ container }}_service
+{% endfor %}
+{% endif %}
      
 {% endfor %} # End container loop
 {% endfor %} # End app loop
