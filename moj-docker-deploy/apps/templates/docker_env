@@ -1,10 +1,22 @@
 PROJECT={{ salt['grains.get']('Apps', default='unknown') }}
 ENV={{ salt['grains.get']('Env', default='unknown') }}
 
-DB_HOST={{ salt['grains.get']('dbhost', default='unknown') }}
-DB_PORT={{ salt['grains.get']('dbport', default='unknown') }}
-DB_USERNAME={{ salt['pillar.get']("rds:db-master-username","") }}
-DB_PASSWORD={{ salt['pillar.get']("rds:db-master-password","") }}
+
+{%- if salt['pillar.get']('rds:db-engine', False) %}
+  DB_HOST={{ salt['grains.get']('dbhost', default='unknown') }}
+  DB_PORT={{ salt['grains.get']('dbport', default='unknown') }}
+  DB_USERNAME={{ salt['pillar.get']("rds:db-master-username","") }}
+  DB_PASSWORD={{ salt['pillar.get']("rds:db-master-password","") }}
+  DATABASE_URL={{ "%s://%s:%s@%s:%s/%s" | format(
+                          pillar['rds']['db-engine'],
+                          pillar['rds']['db-master-username'],
+                          pillar['rds']['db-master-password'],
+                          grains['dbhost'],
+                          grains['dbport'],
+                          pillar['rds']['db-name'])
+                }}
+{% endif %}
+
 
 {%- if 'envvars' in appenv %}
 {% for k, v in appenv.envvars.items() %}
