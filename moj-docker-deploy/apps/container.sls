@@ -40,7 +40,6 @@ include:
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: {{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "'\\''") }}
-      task: {{ salt['grains.get']('%s_task' % container , 'none') | replace("'", "'\\''") }}
 
 {{container}}_service:
   service.running:
