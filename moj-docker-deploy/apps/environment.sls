@@ -18,7 +18,7 @@
     - context: 
       appenv: {{ cdata | yaml }}
       appname: {{ cname }}
-      task: {{ salt['grains.get']('%s_task' % cname , 'none') }}
+      task: '{{ salt['grains.get']('%s_task' % cname , 'none') | replace("'","''")  }}'
     - require:
       - file: /etc/docker_env.d
 
@@ -33,7 +33,7 @@
     - context: 
       appenv: {{ cdata | yaml }}
       appname: {{ cname }}
-      task: {{ salt['grains.get']('%s_task' % cname , 'none') }}
+      task: '{{ salt['grains.get']('%s_task' % cname , 'none') | replace("'", "''") }}'
     - require:
       - file: /etc/docker_env.d
 {% endfor %}
