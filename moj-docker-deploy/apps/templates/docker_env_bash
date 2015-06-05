@@ -3,18 +3,19 @@ ENV='{{ salt['grains.get']('Env', default='unknown') | replace("'", "'\\''") }}'
 DOCKER_STATE='{{ task | replace("'", "'\\''") }}'
 
 {%- if salt['pillar.get']('rds:db-engine', False) %}
-  DB_HOST='{{ salt['grains.get']('dbhost', default='unknown') | replace("'", "'\\''") }}'
-  DB_PORT='{{ salt['grains.get']('dbport', default='unknown') | replace("'", "'\\''") }}'
-  DB_USERNAME='{{ salt['pillar.get']("rds:db-master-username","") | replace("'", "'\\''") }}'
-  DB_PASSWORD='{{ salt['pillar.get']("rds:db-master-password","") | replace("'", "'\\''") }}'
-  DATABASE_URL='{{ "%s://%s:%s@%s:%s/%s" | format(
-                          pillar['rds']['db-engine'],
-                          pillar['rds']['db-master-username'],
-                          pillar['rds']['db-master-password'],
-                          grains['dbhost'],
-                          grains['dbport'],
-                          pillar['rds']['db-name']) | replace("'", "'\\''")
-                }}'
+DB_HOST='{{ salt['grains.get']('dbhost', default='unknown') | replace("'", "'\\''") }}'
+DB_PORT='{{ salt['grains.get']('dbport', default='unknown') | replace("'", "'\\''") }}'
+DB_USERNAME='{{ salt['pillar.get']("rds:db-master-username","") | replace("'", "'\\''") }}'
+DB_PASSWORD='{{ salt['pillar.get']("rds:db-master-password","") | replace("'", "'\\''") }}'
+{% set db_password = pillar['rds']['db-master-password'] | urlencode %}
+DATABASE_URL='{{ "%s://%s:%s@%s:%s/%s" | format(
+                        pillar['rds']['db-engine'],
+                        pillar['rds']['db-master-username'],
+                        db_password,
+                        grains['dbhost'],
+                        grains['dbport'],
+                        pillar['rds']['db-name']) | replace("'", "'\\''")
+              }}'
 {% endif %}
 
 {%- if 'envvars' in appenv %}
