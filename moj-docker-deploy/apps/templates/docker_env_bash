@@ -1,5 +1,6 @@
 PROJECT='{{ salt['grains.get']('Apps', default='unknown') | replace("'", "'\\''") }}'
 ENV='{{ salt['grains.get']('Env', default='unknown') | replace("'", "'\\''") }}'
+DOCKER_STATE='{{ task | replace("'", "'\\''") }}'
 
 {%- if salt['pillar.get']('rds:db-engine', False) %}
   DB_HOST='{{ salt['grains.get']('dbhost', default='unknown') | replace("'", "'\\''") }}'
