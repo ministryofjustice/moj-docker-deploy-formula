@@ -53,7 +53,7 @@ include:
 {% for elb in salt['pillar.get']('elb',[]) %}
 {{ container }}_{{ elb['name'] }}_down:
   elb_reg.instance_deregistered:
-    - name: ELB-{{ elb['name'] }}
+    - name: ELB-{{ elb['name'] | replace(".", "") }}
     - instance: {{ salt['grains.get']('aws_instance_id', []) }}
     - timeout: 130
     - prereq:
@@ -65,7 +65,7 @@ include:
 
 {{ container }}_{{ elb['name'] }}_up:
   elb_reg.instance_registered:
-    - name: ELB-{{ elb['name'] }}
+    - name: ELB-{{ elb['name'] | replace(".", "") }}
     - instance: {{ salt['grains.get']('aws_instance_id', []) }}
     - timeout: 120
     - watch:
