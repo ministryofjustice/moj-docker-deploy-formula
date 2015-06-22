@@ -28,6 +28,24 @@ include:
       - service: nginx
 
 {% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
+{# Set up variables from pillar #}
+{% set container_name = cdata.get('name', cname) %}
+{% set default_registry = salt['pillar.get']('default_registry', '') %}
+{% set docker_registry = cdata.get('registry', default_registry) %}
+{% set container_full_name = '%s/%s' % (docker_registry, container_name) %}
+HOME:
+  environ.setenv:
+    - value: /root
+
+{{ container }}_pull:
+  docker.pulled:
+    - name: {{ container_full_name }}
+    - tag: '{{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "''") }}'
+    - force: True
+    - require:
+      # We need this for docker-py to find the dockercfg and login
+      - environ: HOME
+
 /etc/init/{{container}}_container.conf:
   file.managed:
     - user: root
@@ -48,6 +66,7 @@ include:
     - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
+      - docker: {{ container }}_pull
 
 {% if salt['grains.get']('zero_downtime_deploy', False) %}
 {% for elb in salt['pillar.get']('elb',[]) %}
@@ -56,12 +75,18 @@ include:
     - name: ELB-{{ elb['name'] | replace(".", "") }}
     - instance: {{ salt['grains.get']('aws_instance_id', []) }}
     - timeout: 130
-    - prereq:
-      # This prereq means that this state will trigger before the
-      # following files change (and only if they do change).
-      # As changes to these files also mean a restart of the container
+    # This must always happen before we touch the service:
+    - require_in:
+      - service: {{container}}_service
+    # This should be onchanges but salt currently ANDs these changes
+    # Because it is a watch if you do a zero downtime deploy and nothing's
+    # Changed salt will still de/re-register you in the ELB. We can change
+    # this to onchanges once this is released:
+    # https://github.com/saltstack/salt/pull/24703
+    - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
+      - docker: {{container}}_pull
 
 {{ container }}_{{ elb['name'] }}_up:
   elb_reg.instance_registered:
