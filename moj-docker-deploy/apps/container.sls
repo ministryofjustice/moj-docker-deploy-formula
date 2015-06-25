@@ -13,6 +13,10 @@ include:
     - mode: 600
 {% endif %}
 
+HOME:
+  environ.setenv:
+    - value: /root
+
 {% for server_name, appdata in salt['pillar.get']('docker_envs', {}).items() %}
 /etc/nginx/conf.d/{{server_name}}.conf:
   file.managed:
@@ -26,10 +30,6 @@ include:
       appdata: {{appdata}}
     - watch_in:
       - service: nginx
-
-HOME:
-  environ.setenv:
-    - value: /root
 
 {% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
 {# Set up variables from pillar #}
