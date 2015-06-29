@@ -33,7 +33,7 @@ HOME:
 
 {% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
 {# Set up variables from pillar #}
-{% set container_name = cdata.get('name', cname) %}
+{% set container_name = cdata.get('name', container) %}
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
 {% set docker_registry = cdata.get('registry', default_registry) %}
 {% set container_full_name = '%s/%s' % (docker_registry, container_name) %}
