@@ -1,17 +1,18 @@
 include:
   - apps.container
 
-{% if salt['grains.get']('dead_branch_name', False) %}
-{% set branch_name = salt['grains.get']('dead_branch_name') | replace('/', '-') %}
-{% set branch_name = branch_name | replace("'", "''") %}
-
-{%- if salt['pillar.get']('rds:db-engine', False) == 'postgres' %}
+{% if salt['pillar.get']('rds:db-engine', False) == 'postgres' %}
 postgresql-client:
   pkg.installed
+{% endif %}
 
+{% for branch_name in salt['grains.get']('dead_branch_names', []) %}
+{% set branch_name = branch_name | replace("'", "''") %}
+
+{% if salt['pillar.get']('rds:db-engine', False) == 'postgres' %}
 '{{ branch_name }}_dropdb':
   cmd.run:
-    - name: dropdb '{{ branch_name}}'
+    - name: dropdb --if-exists '{{branch_name}}'
     - env:
       - PGPASSWORD: '{{salt['pillar.get']('rds:db-master-password')}}'
       - PGHOST: '{{salt['grains.get']('dbhost')}}'
@@ -20,6 +21,25 @@ postgresql-client:
     - require:
       - docker: '{{ branch_name }}'
       - pkg: postgresql-client
+      - cmd: '{{ branch_name }}_dropconnections'
+
+'/tmp/dc-{{branch_name}}.sql':
+  file.managed:
+    - source: salt://templates/disconnect_postgres.sql
+    - template: jinja
+    - context:
+      branch_name: '{{branch_name}}'
+
+'{{ branch_name }}_dropconnections':
+  cmd.run:
+    - name: 'psql -d {{salt['pillar.get']('rds:db-name')}} -f /tmp/dc-{{branch_name}}.sql'
+    - require:
+      - file: '/tmp/dc-{{branch_name}}.sql'
+    - env:
+      - PGPASSWORD: '{{salt['pillar.get']('rds:db-master-password')}}'
+      - PGHOST: '{{salt['grains.get']('dbhost')}}'
+      - PGPORT: '{{salt['grains.get']('dbport')}}'
+      - PGUSER: '{{salt['pillar.get']('rds:db-master-username')}}'
 {% endif %}
 
 '/etc/nginx/conf.d/{{branch_name}}.conf':
@@ -27,13 +47,17 @@ postgresql-client:
     - watch_in:
       - service: nginx
 
-
 '{{ branch_name }}':
   docker.absent
-{% endif %}
+
+'dead_branch_names_{{branch_name}}':
+  grains.list_absent:
+    - name: dead_branch_names
+    - value: '{{ branch_name }}'
+
+{% endfor %}
 
 {% for branch_name in salt['grains.get']('branch_names', []) %}
-{% set branch_name = branch_name | replace('/', '-') %}
 {% set branch_name = branch_name | replace("'", "''") %}
 {% set container_port = salt['pillar.get']('branch_port') %}
 {% set branch_environment = salt['pillar.get']('branch_environment') %}
