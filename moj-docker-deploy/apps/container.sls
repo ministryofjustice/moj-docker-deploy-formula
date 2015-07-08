@@ -27,7 +27,7 @@ HOME:
     - template: jinja
     - context:
       server_name: {{server_name}}
-      appdata: {{appdata}}
+      appdata: {{appdata | yaml}}
     - watch_in:
       - service: nginx
 
@@ -35,8 +35,8 @@ HOME:
 {# Set up variables from pillar #}
 {% set container_name = cdata.get('name', container) %}
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
-{% set docker_registry = cdata.get('registry', default_registry) %}
-{% set container_full_name = '%s/%s' % (docker_registry, container_name) %}
+{% set docker_registry =  cdata.get('registry', default_registry) %}
+{% set container_full_name = (docker_registry, container_name) | select | join("/") %}
 
 {{ container }}_pull:
   docker.pulled:
@@ -54,8 +54,9 @@ HOME:
     - mode: 644
     - source: salt://apps/templates/upstart_container.conf
     - template: jinja
-    - context:
-      cdata: {{cdata}}
+    - context: 
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "''") }}'
