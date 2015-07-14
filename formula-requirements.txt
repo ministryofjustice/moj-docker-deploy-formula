@@ -7,4 +7,4 @@ git@github.com:ministryofjustice/ntp-formula.git==v1.1.4
 git@github.com:ministryofjustice/python-formula.git==v1.1.1
 git@github.com:ministryofjustice/hardening-formula.git==v1.2.2
 git@github.com:ministryofjustice/repos-formula.git==v1.1.1
-git@github.com:ministryofjustice/bootstrap-formula.git==v3.0.2
+git@github.com:ministryofjustice/bootstrap-formula.git==v3.0.3
