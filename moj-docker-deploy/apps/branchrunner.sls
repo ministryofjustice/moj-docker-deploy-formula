@@ -1,15 +1,16 @@
 # Only enable if this pillar key exists
-{% if salt['pillar.get']('branch_container', False) %}
+{% if salt['pillar.get']('branch_containers', False) %}
 include:
-  - apps.container
+  - apps.containers
   - apps.branchremover
 
 {% for branch_name in salt['grains.get']('branch_names', []) %}
 {% set branch_name = branch_name | replace("'", "''") %}
-{% set container_port = salt['pillar.get']('branch_port') %}
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
-{% set branch_container = salt['pillar.get']('branch_container') %}
-{% set branch_container_name = branch_container.keys()[0] %}
+{% set branch_container_key = salt['pillar.get']('branch_containers') %}
+{% set branch_container_name = salt['pillar.get']('branch_container_name') %}
+{% set branch_container = salt['pillar.get']('{0}:{1}'.format(branch_container_key, branch_container_name)) %}
+{% set container_port = branch_container.get('ports')['app']['container'] %}
 {% set docker_registry = branch_container.get('registry', default_registry) %}
 {% set branch_container_full = '%s/%s' % (docker_registry, branch_container_name) %}
 
@@ -51,14 +52,11 @@ include:
     - context:
       server_name: '{{branch_name}}.{{ salt['pillar.get']('master_zone') }}'
       branch_name: '{{branch_name}}'
-      appdata:
+      appdata: 
         branchbuilder: True
+        assets_host_path: '/{{branch_name}}/'
         containers:
-          '{{branch_name}}':
-            http_locations:
-              - /ping.json
-
-      container_port: {{container_port}}
+          '{{branch_name}}': {{branch_container | yaml}}
     - require:
       - cmd: '{{ branch_name }}'
     - watch_in:
