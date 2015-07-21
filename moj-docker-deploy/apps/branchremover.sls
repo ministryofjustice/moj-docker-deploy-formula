@@ -29,7 +29,7 @@ postgresql-client:
 
 '{{ branch_name }}_dropconnections':
   cmd.run:
-    - name: 'psql -d {{salt['pillar.get']('rds:db-name')}} -f /tmp/dc-{{branch_name}}.sql'
+    - name: 'psql -f /tmp/dc-{{branch_name}}.sql'
     - require:
       - file: '/tmp/dc-{{branch_name}}.sql'
     - env:
@@ -37,6 +37,7 @@ postgresql-client:
       - PGHOST: '{{salt['grains.get']('dbhost')}}'
       - PGPORT: '{{salt['grains.get']('dbport')}}'
       - PGUSER: '{{salt['pillar.get']('rds:db-master-username')}}'
+      - PGDATABASE: '{{salt['pillar.get']('rds:db-name')}}'
 {% endif %}
 
 '/etc/nginx/conf.d/{{branch_name}}.conf':
