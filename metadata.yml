@@ -4,3 +4,4 @@ dependencies:
   - git@github.com:ministryofjustice/repos-formula.git
   - git@github.com:ministryofjustice/admins-formula.git
   - git@github.com:ministryofjustice/hardening-formula.git
+  - git@github.com:ministryofjustice/bootstrap-formula.git>=v3.0.3

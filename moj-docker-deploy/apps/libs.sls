@@ -1,42 +1,16 @@
-include:
-  - nginx
-  - docker
-  - .environment
+# Macro to pull and setup a service job for a container
+#  
+# Args:
+#   container(string) - The name of the container
+#   cdata(dictionary) - The keyed setup data for the container
+#    
 
-{% if salt['pillar.get']('registry_logins') %}
-/root/.dockercfg:
-  file.managed:
-    - source: salt://apps/templates/docker_logins.py
-    - template: py
-    - user: root
-    - group: root
-    - mode: 600
-{% endif %}
+{% macro create_container_config(container, cdata) %}
 
-HOME:
-  environ.setenv:
-    - value: /root
-
-{% for server_name, appdata in salt['pillar.get']('docker_envs', {}).items() %}
-/etc/nginx/conf.d/{{server_name}}.conf:
-  file.managed:
-    - source: salt://apps/templates/nginx_container.conf
-    - user: root
-    - group: root
-    - mode: 644
-    - template: jinja
-    - context:
-      server_name: {{server_name}}
-      appdata: {{appdata}}
-    - watch_in:
-      - service: nginx
-
-{% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
-{# Set up variables from pillar #}
 {% set container_name = cdata.get('name', container) %}
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
-{% set docker_registry = cdata.get('registry', default_registry) %}
-{% set container_full_name = '%s/%s' % (docker_registry, container_name) %}
+{% set docker_registry =  cdata.get('registry', default_registry) %}
+{% set container_full_name = (docker_registry, container_name) | select | join("/") %}
 
 {{ container }}_pull:
   docker.pulled:
@@ -54,8 +28,9 @@ HOME:
     - mode: 644
     - source: salt://apps/templates/upstart_container.conf
     - template: jinja
-    - context:
-      cdata: {{cdata}}
+    - context: 
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "''") }}'
@@ -68,6 +43,14 @@ HOME:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
       - docker: {{ container }}_pull
+{% endmacro %}
+
+# Macro to register and de-register a container with elbs
+#  
+# Args:
+#   container(string) - The name of the container
+# 
+{% macro setup_elb_registering(container) %}
 
 {% if salt['grains.get']('zero_downtime_deploy', False) %}
 {% for elb in salt['pillar.get']('elb',[]) %}
@@ -100,6 +83,44 @@ HOME:
       - service: {{ container }}_service
 {% endfor %}
 {% endif %}
-     
-{% endfor %} # End container loop
-{% endfor %} # End app loop
+{% endmacro %}
+
+
+
+# Macro to set up containers environment variables
+#
+# Args:
+#   cname(string) - The name of the container
+#   cdata(dictionary) - The keyed setup data for the container
+{% macro setup_container_environment_variables(cname, cdata) %}
+/etc/docker_env.d/{{ cname }}:
+  file:
+    - managed
+    - source: salt://apps/templates/docker_env
+    - user: root
+    - group: docker
+    - mode: 640
+    - template: jinja
+    - context: 
+      appenv: {{ cdata | yaml }}
+      appname: {{ cname }}
+      task: '{{ salt['grains.get']('%s_task' % cname , 'none') | replace("'","''")  }}'
+    - require:
+      - file: /etc/docker_env.d
+
+/etc/docker_env.d/{{ cname }}_bash:
+  file:
+    - managed
+    - source: salt://apps/templates/docker_env_bash
+    - user: root
+    - group: docker
+    - mode: 640
+    - template: jinja
+    - context: 
+      appenv: {{ cdata | yaml }}
+      appname: {{ cname }}
+      task: '{{ salt['grains.get']('%s_task' % cname , 'none') | replace("'", "''") }}'
+    - require:
+      - file: /etc/docker_env.d
+{% endmacro %}
+
