@@ -6,6 +6,18 @@
 
 {% import 'apps/libs.sls' as macros with context %}
 
+{% if salt['pillar.get']('registry_logins') %}
+/root/.dockercfg:
+  file.managed:
+    - source: salt://apps/templates/docker_logins.py
+    - template: py
+    - user: root
+    - group: root
+    - mode: 600
+    - require_in:
+      - docker.pulled
+{% endif %}
+
 /etc/docker_env.d:
   file.directory:
     - user: root
