@@ -3,6 +3,8 @@
 # Pillar envvars settings will be collected into a file that can
 # be injected into containers as environment variables on startup
 #
+include:
+  - docker
 
 {% import 'apps/libs.sls' as macros with context %}
 
