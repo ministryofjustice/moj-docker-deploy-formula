@@ -1,3 +1,25 @@
+# Setup envvironment variables for containers. 
+#
+# Pillar envvars settings will be collected into a file that can
+# be injected into containers as environment variables on startup
+#
+include:
+  - docker
+
+{% import 'apps/libs.sls' as macros with context %}
+
+{% if salt['pillar.get']('registry_logins') %}
+/root/.dockercfg:
+  file.managed:
+    - source: salt://apps/templates/docker_logins.py
+    - template: py
+    - user: root
+    - group: root
+    - mode: 600
+    - require_in:
+      - docker.pulled
+{% endif %}
+
 /etc/docker_env.d:
   file.directory:
     - user: root
@@ -7,34 +29,12 @@
 
 {% for appname,appdata in pillar.get('docker_envs', {}).items() %}
 {% for cname,cdata in appdata.get('containers',{}).items() %}
-/etc/docker_env.d/{{ cname }}:
-  file:
-    - managed
-    - source: salt://apps/templates/docker_env
-    - user: root
-    - group: docker
-    - mode: 640
-    - template: jinja
-    - context: 
-      appenv: {{ cdata | yaml }}
-      appname: {{ cname }}
-      task: '{{ salt['grains.get']('%s_task' % cname , 'none') | replace("'","''")  }}'
-    - require:
-      - file: /etc/docker_env.d
+{{   macros.setup_container_environment_variables(cname, cdata) }}
+{% endfor %}
+{% endfor %}
 
-/etc/docker_env.d/{{ cname }}_bash:
-  file:
-    - managed
-    - source: salt://apps/templates/docker_env_bash
-    - user: root
-    - group: docker
-    - mode: 640
-    - template: jinja
-    - context: 
-      appenv: {{ cdata | yaml }}
-      appname: {{ cname }}
-      task: '{{ salt['grains.get']('%s_task' % cname , 'none') | replace("'", "''") }}'
-    - require:
-      - file: /etc/docker_env.d
+# Set up environment variabes for non proxied containers
+{% for cname,cdata in pillar.get('containers',{}).items() %}
+{{ macros.setup_container_environment_variables(cname, cdata) }}
 {% endfor %}
-{% endfor %}
+
