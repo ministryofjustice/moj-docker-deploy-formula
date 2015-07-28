@@ -5,7 +5,7 @@
 #   cdata(dictionary) - The keyed setup data for the container
 #    
 
-{% macro create_container_config(container, cdata) %}
+{% macro create_container_config(container, cdata, server_name=None) %}
 
 {% set container_name = cdata.get('name', container) %}
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
@@ -43,6 +43,10 @@
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
       - docker: {{ container }}_pull
+{% if server_name %}
+    - require_in:
+      - file: /etc/nginx/conf.d/{{ server_name }}.conf
+{% endif %}
 {% endmacro %}
 
 # Macro to register and de-register a container with elbs

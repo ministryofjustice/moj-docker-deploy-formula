@@ -28,7 +28,7 @@ include:
 
 # Create container configs for all the proxied containers
 {% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
-{{ macros.create_container_config(container, cdata) }}
+{{ macros.create_container_config(container, cdata, server_name) }}
 {{ macros.setup_elb_registering(container) }}
 {% endfor %} # End container loop
 {% endfor %} # End app loop
