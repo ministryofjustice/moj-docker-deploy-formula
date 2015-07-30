@@ -16,7 +16,7 @@ postgresql-client:
       - PGPORT: '{{salt['grains.get']('dbport')}}'
       - PGUSER: '{{salt['pillar.get']('rds:db-master-username')}}'
     - require:
-      - docker: '{{ branch_name }}'
+      - service: '{{ branch_name }}_service'
       - pkg: postgresql-client
       - cmd: '{{ branch_name }}_dropconnections'
 
@@ -45,8 +45,14 @@ postgresql-client:
     - watch_in:
       - service: nginx
 
-'{{ branch_name }}':
-  docker.absent
+'{{ branch_name }}_service':
+  service.dead:
+    - name: {{branch_name}}_container
+
+/etc/init/{{branch_name}}_container.conf:
+  file.absent:
+    - require:
+      - service: {{ branch_name }}_service
 
 'dead_branch_names_{{branch_name}}':
   grains.list_absent:
