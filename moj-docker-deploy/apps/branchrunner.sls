@@ -4,16 +4,26 @@ include:
   - apps.containers
   - apps.branchremover
 
+# Here we loop through branch names set in a grain by jenkins
 {% for branch_name in salt['grains.get']('branch_names', []) %}
-{% set branch_name = branch_name | replace("'", "''") %}
+
+# Here we get the settings for the container the branch runner will run
+# This is the path to the dictionary with the vhost config
+{% set branch_pillar_path = salt['pillar.get']('branch_runner:pillar_path') %}
+# This is the container to select from the vhost
+{% set branch_container_name = salt['pillar.get']('branch_runner:container_to_run') %}
+# This is the vhost we will use to configure nginx
+{% set branch_vhost = salt['pillar.get'](branch_pillar_path) %}
+# This is the container config we will use to run the branch container
+{% set branch_container = branch_vhost['containers'][branch_container_name] %}
+
+# Here we construct the string to send to docker pull
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
-{% set branch_container_key = salt['pillar.get']('branch_containers') %}
-{% set branch_container_name = salt['pillar.get']('branch_container_name') %}
-{% set branch_container = salt['pillar.get']('{0}:{1}'.format(branch_container_key, branch_container_name)) %}
 {% set docker_registry = branch_container.get('registry', default_registry) %}
 {% set branch_container_full = '%s/%s' % (docker_registry, branch_container_name) %}
 
 {%- if salt['pillar.get']('rds:db-engine', False) %}
+# If there is a database we need to override it with a fresh dbname
 {% set db_password = pillar['rds']['db-master-password'] | urlencode %}
 {% set DATABASE_URL= '%s://%s:%s@%s:%s/%s' | format(
                         pillar['rds']['db-engine'],
@@ -74,8 +84,16 @@ include:
           default=salt['pillar.get']('master_zone')
         )
       }}'
-      branch_name: '{{branch_name}}'
       appdata:
+# This ensures that we send the correct vhost config to nginx
+# We have to override the containers dictionary so that we can
+# set the container name to the branch name
+# The 3 dots are a yaml end of document marker that gets added
+# by yaml.dump on single values (latest version of salt would 
+# remove automatically)
+{% for k, v in branch_vhost.items() if k != "containers" %}
+        {{k}}: {{v|yaml|replace('...','')}}
+{% endfor %}
         branchbuilder: True
         assets_host_path: '/{{branch_name}}/'
         containers:
