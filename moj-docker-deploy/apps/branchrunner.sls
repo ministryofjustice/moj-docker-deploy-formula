@@ -32,7 +32,8 @@ include:
                         grains['dbhost'],
                         grains['dbport'],
                         branch_name ) %}
-
+{% else %}
+{% set DATABASE_URL= "" %}
 {% endif %}
 
 '{{ branch_name }}_pull':
