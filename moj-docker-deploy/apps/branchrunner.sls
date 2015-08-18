@@ -1,5 +1,5 @@
 # Only enable if this pillar key exists
-{% if salt['pillar.get']('branch_containers', False) %}
+{% if salt['pillar.get']('branch_runner', False) %}
 include:
   - apps.containers
   - apps.branchremover
