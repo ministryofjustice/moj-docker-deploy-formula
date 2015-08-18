@@ -20,7 +20,8 @@ include:
 # Here we construct the string to send to docker pull
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
 {% set docker_registry = branch_container.get('registry', default_registry) %}
-{% set branch_container_full = '%s/%s' % (docker_registry, branch_container_name) %}
+{% set branch_container_long_name = branch_container['name'] %}
+{% set branch_container_full = '%s/%s' % (docker_registry, branch_container_long_name) %}
 
 {%- if salt['pillar.get']('rds:db-engine', False) %}
 # If there is a database we need to override it with a fresh dbname
