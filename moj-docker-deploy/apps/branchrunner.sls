@@ -97,7 +97,7 @@ include:
         {{k}}: {{v|yaml|replace('...','')}}
 {% endfor %}
         branchbuilder: True
-        assets_host_path: '/{{branch_name}}/'
+        assets_host_path: '/{{branch_name}}'
         containers:
           '{{branch_name}}': {{branch_container | yaml}}
     - watch_in:
