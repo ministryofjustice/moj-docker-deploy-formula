@@ -68,9 +68,14 @@ include:
     - mode: 644
     - template: jinja
     - context:
-      server_name: '{{branch_name}}.{{ salt['pillar.get']('master_zone') }}'
+      server_name: '{{branch_name}}.{{
+        salt['pillar.get'](
+          'branch_runner:container_base_hostname',
+          default=salt['pillar.get']('master_zone')
+        )
+      }}'
       branch_name: '{{branch_name}}'
-      appdata: 
+      appdata:
         branchbuilder: True
         assets_host_path: '/{{branch_name}}/'
         containers:
