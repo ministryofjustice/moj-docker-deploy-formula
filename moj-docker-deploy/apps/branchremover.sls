@@ -22,7 +22,7 @@ postgresql-client:
 
 '/tmp/dc-{{branch_name}}.sql':
   file.managed:
-    - source: salt://templates/disconnect_postgres.sql
+    - source: salt://moj-docker-deploy/templates/disconnect_postgres.sql
     - template: jinja
     - context:
       branch_name: '{{branch_name}}'

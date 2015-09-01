@@ -5,7 +5,7 @@
 # connections to these containers.
 #
 
-{% import 'apps/libs.sls' as macros with context %}
+{% import 'moj-docker-deploy/apps/libs.sls' as macros with context %}
 
 include:
   - nginx
@@ -15,7 +15,7 @@ include:
 {% for server_name, appdata in salt['pillar.get']('docker_envs', {}).items() %}
 /etc/nginx/conf.d/{{server_name}}.conf:
   file.managed:
-    - source: salt://apps/templates/nginx_container.conf
+    - source: salt://moj-docker-deploy/apps/templates/nginx_container.conf
     - user: root
     - group: root
     - mode: 644

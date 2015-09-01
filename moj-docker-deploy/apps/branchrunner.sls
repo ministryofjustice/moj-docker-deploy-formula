@@ -1,8 +1,8 @@
 # Only enable if this pillar key exists
 {% if salt['pillar.get']('branch_runner', False) %}
 include:
-  - apps.containers
-  - apps.branchremover
+  - .containers
+  - .branchremover
 
 # Here we loop through branch names set in a grain by jenkins
 {% for branch_name in salt['grains.get']('branch_names', []) %}
@@ -51,7 +51,7 @@ include:
     - user: root
     - group: root
     - mode: 644
-    - source: salt://apps/templates/upstart_branch_container.conf
+    - source: salt://moj-docker-deploy/apps/templates/upstart_branch_container.conf
     - template: jinja
     - context: 
       branch_container_full: {{ branch_container_full }}
@@ -74,7 +74,7 @@ include:
 
 '/etc/nginx/conf.d/{{branch_name}}.conf':
   file.managed:
-    - source: salt://apps/templates/nginx_container.conf
+    - source: salt://moj-docker-deploy/apps/templates/nginx_container.conf
     - user: root
     - group: root
     - mode: 644

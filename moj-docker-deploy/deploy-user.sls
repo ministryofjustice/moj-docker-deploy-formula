@@ -4,7 +4,7 @@ include:
 /etc/sudoers.d/deploy:
   file.managed:
     - mode: 0440
-    - source: salt://files/deploy.sudoers
+    - source: salt://moj-docker-deploy/files/deploy.sudoers
 
 deploy-user:
   user.present:
