@@ -26,7 +26,7 @@
     - user: root
     - group: root
     - mode: 644
-    - source: salt://apps/templates/upstart_container.conf
+    - source: salt://moj-docker-deploy/apps/templates/upstart_container.conf
     - template: jinja
     - context: 
       container_full_name: {{ container_full_name }}
@@ -100,7 +100,7 @@
 /etc/docker_env.d/{{ cname }}:
   file:
     - managed
-    - source: salt://apps/templates/docker_env
+    - source: salt://moj-docker-deploy/apps/templates/docker_env
     - user: root
     - group: docker
     - mode: 640
@@ -115,7 +115,7 @@
 /etc/docker_env.d/{{ cname }}_bash:
   file:
     - managed
-    - source: salt://apps/templates/docker_env_bash
+    - source: salt://moj-docker-deploy/apps/templates/docker_env_bash
     - user: root
     - group: docker
     - mode: 640

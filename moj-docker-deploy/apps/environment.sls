@@ -6,12 +6,12 @@
 include:
   - docker
 
-{% import 'apps/libs.sls' as macros with context %}
+{% import 'moj-docker-deploy/apps/libs.sls' as macros with context %}
 
 {% if salt['pillar.get']('registry_logins') %}
 /root/.dockercfg:
   file.managed:
-    - source: salt://apps/templates/docker_logins.py
+    - source: salt://moj-docker-deploy/apps/templates/docker_logins.py
     - template: py
     - user: root
     - group: root

@@ -4,7 +4,7 @@
 # jobs setup for them.
 #
 
-{% import 'apps/libs.sls' as macros with context %}
+{% import 'moj-docker-deploy/apps/libs.sls' as macros with context %}
 
 include:
   - docker
