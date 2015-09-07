@@ -34,6 +34,10 @@
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "''") }}'
+      ec2_neighbours: {{ salt['grains.get']('ec2_neighbours', {}) }}
+      ec2_local_private_dns_name: {{ salt['grains.get']('ec2_local:private_dns_name', '') }}
+      ec2_local_private_dns_name_safe: {{ salt['grains.get']('ec2_local:private_dns_name_safe', '') }}
+      ec2_cluster_nodes_prefix: {{ cdata.get('cluster_nodes_prefix', '') }}
 
 {{container}}_service:
   service.running:

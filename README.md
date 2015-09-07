@@ -47,6 +47,8 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 - [ports](#ports)
 - [volumes](#volumes)
 - [envvars](#envvars)
+- [enable_clustering](#enable_clustering)
+- [cluster_nodes_prefix](#cluster_nodes_prefix)
 
 ####[Non-Proxied Containers Settings](#non-proxied-containers-settings-subsection)
 
@@ -246,6 +248,22 @@ Note you get some free variables for database details etc, the following will be
 - *DB_USERNAME*: The RDS username set in the cloudformation yaml
 - *DB_PASSWORD*: The RDS password set in the cloudformation yaml
 - *DATABASE_URL*: db-engine://db-user:db-password@db-host:db-port/db-name
+
+#### enable\_clustering
+
+When set to True, clustering of containers with ports exposed on their hosts will be enabled. In practice, this means that other EC2 hosts and containers DNS resolvable inside a container, and a list of nodes will be exposed via environmental variables. See https://github.com/ministryofjustice/template-deploy#clustering_containers for more details.
+
+```yaml
+	enable_clustering: True
+```
+
+#### cluster\_nodes\_prefix
+
+To add a prefix to cluster nodes lists.
+
+```yaml
+	cluster_nodes_prefix: 'someprefix-'
+```
 
 ------------------------------------------------------
 ###Non-proxied Containers Settings Subsection
