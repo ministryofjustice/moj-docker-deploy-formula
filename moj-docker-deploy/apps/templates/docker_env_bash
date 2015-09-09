@@ -18,6 +18,12 @@ DATABASE_URL='{{ "%s://%s:%s@%s:%s/%s" | format(
               }}'
 {% endif %}
 
+{%- if salt['grains.get']('ElasticacheReplicationGroupName', False) %}
+REDIS_HOST='{{ salt['grains.get']('elasticache:default_endpoint:Address', default='')  | replace("'", "'\\''") }}'
+REDIS_PORT='{{ salt['grains.get']('elasticache:default_endpoint:Port', default='')  | replace("'", "'\\''") }}'
+REDIS_URL='{{ salt['grains.get']('ElasticacheEngine', default='') }}://{{ salt['grains.get']('elasticache:default_endpoint:Address', default='')  | replace("'", "'\\''") }}:{{ salt['grains.get']('elasticache:default_endpoint:Port', default='')  | replace("'", "'\\''") }}'
+{% endif %}
+
 {%- if 'envvars' in appenv %}
 {% for k, v in appenv.envvars.items() %}
 {{ k }}='{{ v | replace("'", "'\\''") }}'

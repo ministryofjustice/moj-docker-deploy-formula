@@ -1,5 +1,6 @@
 ## UNRELEASED
 
+* Add elasticache docker envs if available
 * Enable clustering of containers with containers in other EC2 instances
 * Fix macro calls introduced for nginx logs
 
