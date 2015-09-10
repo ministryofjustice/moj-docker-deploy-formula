@@ -57,10 +57,10 @@
 {% macro setup_elb_registering(container) %}
 
 {% if salt['grains.get']('zero_downtime_deploy', False) %}
-{% for elb in salt['pillar.get']('elb',[]) %}
-{{ container }}_{{ elb['name'] }}_down:
+{% for lb in salt['grains.get']('lbs',{}).keys() %}
+{{ container }}_{{ lb }}_down:
   elb_reg.instance_deregistered:
-    - name: ELB-{{ elb['name'] | replace(".", "") }}
+    - name: {{ lb }}
     - instance: {{ salt['grains.get']('aws_instance_id', []) }}
     - timeout: 130
     # This must always happen before we touch the service:
@@ -76,9 +76,9 @@
       - file: /etc/docker_env.d/{{container}}
       - docker: {{container}}_pull
 
-{{ container }}_{{ elb['name'] }}_up:
+{{ container }}_{{ lb }}_up:
   elb_reg.instance_registered:
-    - name: ELB-{{ elb['name'] | replace(".", "") }}
+    - name: {{ lb }}
     - instance: {{ salt['grains.get']('aws_instance_id', []) }}
     - timeout: 120
     - watch:
