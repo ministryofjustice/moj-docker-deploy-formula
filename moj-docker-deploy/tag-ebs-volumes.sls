@@ -15,15 +15,8 @@ tag-ebs-volumes:
     - require:
       - file: /usr/local/bin/ebs-tag.py
 
-python-pip:
-  pkg.installed
-
 requests:
-  pip.installed:
-    - require:
-      - pkg: python-pip
+  pip.installed
 
 boto:
-  pip.installed:
-    - require:
-      - pkg: python-pip
+  pip.installed
