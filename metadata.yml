@@ -5,4 +5,5 @@ dependencies:
   - git@github.com:ministryofjustice/admins-formula.git
   - git@github.com:ministryofjustice/hardening-formula.git
   - git@github.com:ministryofjustice/bootstrap-formula.git>=v3.0.3
+  - git@github.com:ministryofjustice/aws-formula.git>=v0.4.0
 

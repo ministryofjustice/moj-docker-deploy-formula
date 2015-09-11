@@ -1,3 +1,7 @@
+## Unreleased
+
+* use grains from aws formula for elb name
+
 ## v1.0.2
 
 * Move _states to root directory
