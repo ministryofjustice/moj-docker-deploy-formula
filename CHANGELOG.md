@@ -1,4 +1,4 @@
-## Unreleased
+## v1.0.3
 
 * use grains from aws formula for elb name
 
