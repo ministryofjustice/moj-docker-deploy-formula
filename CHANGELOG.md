@@ -1,4 +1,4 @@
-##UNRELEASD
+## v1.0.4
 
 * Bump aws-formula version to 0.4.3
 
