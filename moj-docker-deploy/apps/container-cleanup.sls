@@ -1,7 +1,7 @@
 include:
   - docker
 
-{% import 'apps/libs.sls' as macros with context %}
+{% import 'moj-docker-deploy/apps/libs.sls' as macros with context %}
 
 {{ macros.create_container_config('tutum_cleanup', {
   'name': 'tutum/cleanup',

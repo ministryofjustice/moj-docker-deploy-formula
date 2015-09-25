@@ -1,3 +1,7 @@
+## Unreleased
+
+* Fix macro import for cleanup containers
+
 ## v1.0.5
 
 * Set a default nginx host to avoid branch confusion
