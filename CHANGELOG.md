@@ -1,4 +1,4 @@
-## Unreleased
+## v1.0.6
 
 * Fix macro import for cleanup containers
 
