@@ -1,3 +1,7 @@
+## v1.0.5
+
+* Set a default nginx host to avoid branch confusion
+
 ## v1.0.4
 
 * Bump aws-formula version to 0.4.3
