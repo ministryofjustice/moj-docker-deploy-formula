@@ -49,6 +49,8 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 
 ####[Non-Proxied Containers Settings](#non-proxied-containers-settings-subsection)
 
+####[Overriding the formula files in your own repo](#overriding-the-formula-files-in-your-own-repo)
+
 ------------------------------------------------------
 ###Registry Settings
 ###default-registry
@@ -228,4 +230,29 @@ Outside of the 'docker_envs' section used to add proxied containers, we can also
 
 
 ------------------------------------------------------
+###Overriding the formula files in your own repo
 
+In case you need to use a self-customized version of certain files from your repo instead of the corresponding formula files, you can do the following:
+
+- under `salt` create a directory structure replicating the formula one
+
+- place the file in the location corresponding to the formula one.
+
+Example:
+You want to use your own `upstart_container.conf` file because of customizations you have made.
+Within your `deploy` repo, under `salt` create the following subdirectories: 
+
+
+      moj-docker-deploy/apps/templates
+
+and place your `upstart_container.conf` file there.
+Execute an `update`:
+
+
+      fab application:<app_name> environment:<env>  aws:<your aws credentials> config:./cloudformation/<your app>.yaml passwords:./cloudformation/<your app>-secrets.yaml  update -u <your username>
+
+On your target AWS nodes, check for a file:
+
+    /etc/init/<your application>_container.conf
+
+and verify that it has been updated as desired.
