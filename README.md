@@ -32,6 +32,7 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 
 - [docker_envs](#docker_envs)
 - [nginx_port](#nginx_port)
+- [nginx_logs](#nginx_logs)
 - [assets_location](#assets_location)
 - [ssl](#ssl)
 - [proxies](#proxies)
@@ -101,9 +102,32 @@ This is a dictionary of docker environments keyed by the server name for your vh
 This is the port you should direct your ELB to. If not specified, the default setting is as shown below.
 
 ```yaml    
-    	nginx_port: 80
+    nginx_port: 80
 ```
     
+###nginx_logs
+This key allows you to customise the format & path of nginx logs. If not specified, the default logging configuration will be used, resulting in these lines in the nginx config file:
+```
+    access_log  /var/log/nginx/{{server_name}}.access.json logstash_json;
+    error_log   /var/log/nginx/{{server_name}}.error.log error;
+```
+If you want to customize this, you can specify additional (or replacement) formats and log file paths like this:
+```
+    nginx_logs:
+      formats:
+        # NOTE: logstash_json format is always present,
+        # you only need to define alternative formats
+        my_custom_format: 'my custom format definition'
+      access_logs:
+        - path: '/var/log/nginx/logstash_access.log'
+          format: logstash_json
+        - path: '/var/log/nginx/my_custom_access.log'
+          format: my_custom_format
+      error_logs:
+        - path: '/var/log/nginx/error.log'
+          format: error
+```
+
 ###assets_location
 This key specifies the location in nginx to proxy to the S3 bucket. If not specified, the default setting is as shown below.
    
