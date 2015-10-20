@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* Fix macro calls introduced for nginx logs
+
 ## v1.0.6
 
 * Fix macro import for cleanup containers
