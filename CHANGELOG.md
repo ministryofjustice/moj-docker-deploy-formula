@@ -1,5 +1,6 @@
 ## UNRELEASED
 
+* Enable clustering of containers with containers in other EC2 instances
 * Fix macro calls introduced for nginx logs
 
 ## v1.0.6
