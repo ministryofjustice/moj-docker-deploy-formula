@@ -80,7 +80,7 @@ include:
     - mode: 644
     - template: jinja
     - context:
-      server_name: '{{branch_name}}.{{
+      server_name: '{{branch_name | replace(".", "-") }}.{{
         salt['pillar.get'](
           'branch_runner:container_base_hostname',
           default=salt['pillar.get']('master_zone')
