@@ -1,6 +1,14 @@
-## UNRELEASED
+## v1.2.0
 
-* Enable clustering of containers with containers in other EC2 instances
+Features:
+* updated nginx-formula to 3.3.0, for the new log file/format customisation
+* allowed customization of nginx log format
+* Add ability to cluster containers with other hosts containers
+
+Fixes:
+* Strip dots from branch name subdomain host name
+* Updated README
+* Add a fallback check to the pillar for a containers host port
 * Fix macro calls introduced for nginx logs
 
 ## v1.0.6
