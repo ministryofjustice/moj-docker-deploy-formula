@@ -33,7 +33,8 @@
       cdata: {{cdata | yaml}}
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
-      tag: '{{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "''") }}'
+      {% set default_version = cdata.get('initial_version', 'latest') %}
+      tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
 
 {{container}}_service:
   service.running:
