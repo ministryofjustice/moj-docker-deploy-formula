@@ -1,3 +1,8 @@
+## v1.3.1
+
+Fixes:
+* Remove require on requests
+
 ## v1.3.0
 
 * Add an initial_version option to the container pillar
