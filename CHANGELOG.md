@@ -1,3 +1,8 @@
+## v1.3.0
+
+* Add an initial_version option to the container pillar
+* Update nginx version to 3.3.1
+
 ## v1.2.0
 
 Features:
