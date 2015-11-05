@@ -1,3 +1,8 @@
+## unreleased 
+
+Features:
+* Update nginx version to 3.3.2
+
 ## v1.3.1
 
 Fixes:
