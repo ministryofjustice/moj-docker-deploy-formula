@@ -1,4 +1,7 @@
-## unreleased 
+## v1.3.3
+
+Fixes:
+  * Revert Remove require on requests
 
 Features:
 * Update nginx version to 3.3.2
