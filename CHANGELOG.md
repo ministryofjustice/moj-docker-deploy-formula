@@ -1,3 +1,8 @@
+## v1.3.4
+
+Features:
+* Update nginx-formula version to 3.3.3
+
 ## v1.3.3
 
 Fixes:
