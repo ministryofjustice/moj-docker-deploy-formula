@@ -41,6 +41,7 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 ####[Proxied Containers Settings Subsection](#proxied-containers-settings-subsection)
 - [containers](#containers)
 - [name](#name)
+- [initial_version](#initial_version)
 - [registry](#registry)
 - [http_locations](#http_locations)
 - [location](#location)
@@ -178,6 +179,14 @@ This is the name of the container as it is tagged in docker
 
 ```yaml        
             name: tutum/hello-world
+```
+
+####initial_version
+This is the initial version tag of the container to install if there is no other version
+already installed on the intance.
+
+```yaml        
+            initial_version: master.kj2312km
 ```
 
 ####registry

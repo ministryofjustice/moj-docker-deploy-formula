@@ -1,7 +1,40 @@
-## UNRELEASED
+## v1.3.4
 
 * Add elasticache docker envs if available
 * Enable clustering of containers with containers in other EC2 instances
+Features:
+* Update nginx-formula version to 3.3.3
+
+## v1.3.3
+
+Fixes:
+  * Revert Remove require on requests
+
+Features:
+* Update nginx version to 3.3.2
+
+## v1.3.1
+
+Fixes:
+* Remove require on requests
+
+## v1.3.0
+
+* Add an initial_version option to the container pillar
+* Update nginx version to 3.3.1
+
+## v1.2.0
+
+Features:
+* updated nginx-formula to 3.3.0, for the new log file/format customisation
+* allowed customization of nginx log format
+* Add ability to cluster containers with other hosts containers
+
+Fixes:
+* Strip dots from branch name subdomain host name
+* Updated README
+* Add a fallback check to the pillar for a containers host port
+>>>>>>> master
 * Fix macro calls introduced for nginx logs
 
 ## v1.0.6
