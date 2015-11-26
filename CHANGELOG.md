@@ -1,3 +1,7 @@
+## v1.3.5
+Fixes:
+* docker pulling the wrong tag 
+
 ## v1.3.4
 
 * Add elasticache docker envs if available

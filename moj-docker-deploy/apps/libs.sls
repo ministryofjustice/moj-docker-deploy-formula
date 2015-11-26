@@ -11,11 +11,12 @@
 {% set default_registry = salt['pillar.get']('default_registry', '') %}
 {% set docker_registry =  cdata.get('registry', default_registry) %}
 {% set container_full_name = (docker_registry, container_name) | select | join("/") %}
+{% set default_version = cdata.get('initial_version', 'latest') %}
 
 {{ container }}_pull:
   docker.pulled:
     - name: {{ container_full_name }}
-    - tag: '{{ salt['grains.get']('%s_tag' % container , 'latest') | replace("'", "''") }}'
+    - tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
     - force: True
     - require:
       # We need this for docker-py to find the dockercfg and login
@@ -33,7 +34,6 @@
       cdata: {{cdata | yaml}}
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
-      {% set default_version = cdata.get('initial_version', 'latest') %}
       tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
 
 {{container}}_service:
