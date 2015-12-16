@@ -1,3 +1,11 @@
+## v1.3.6
+
+Features:
+* Updated nginx-formula dependency to v3.3.4
+
+Fixes:
+* custom nginx json log formats resulting in unparseable double-quoted json
+
 ## v1.3.5
 Fixes:
 * docker pulling the wrong tag 
