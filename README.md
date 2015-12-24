@@ -53,6 +53,8 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 
 ####[Non-Proxied Containers Settings](#non-proxied-containers-settings-subsection)
 
+####[Setting up branchrunner](docs/branchrunner.md)
+
 ####[Overriding the formula files in your own repo](#overriding-the-formula-files-in-your-own-repo)
 
 ------------------------------------------------------
