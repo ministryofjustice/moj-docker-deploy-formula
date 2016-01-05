@@ -109,6 +109,13 @@ This is the port you should direct your ELB to. If not specified, the default se
 ```yaml    
     nginx_port: 80
 ```
+
+You can specify multiple vhosts with the same port, but in that case you have to make sure that all the vhosts that will not be the default server also explicitly say so as below. If not, nginx will refuse to load the config due to multiple default servers being set.
+
+```yaml
+    default_server: False
+```
+
     
 ###nginx_logs
 This key allows you to customise the format & path of nginx logs. If not specified, the default logging configuration will be used, resulting in these lines in the nginx config file:
