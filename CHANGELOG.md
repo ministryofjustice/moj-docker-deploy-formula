@@ -1,3 +1,11 @@
+## v1.4.0
+
+Features:
+* Allow overriding database settings in the pillar
+* Allow disabling the default server setting on a vhost
+Fixes:
+* Add documentation for setting up branchrunner
+
 ## v1.3.6
 
 Features:
