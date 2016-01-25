@@ -1,31 +1,36 @@
-PROJECT='{{ salt['grains.get']('Apps', default='unknown') | replace("'", "'\\''") }}'
-ENV='{{ salt['grains.get']('Env', default='unknown') | replace("'", "'\\''") }}'
-DOCKER_STATE='{{ task | replace("'", "'\\''") }}'
+{%- set envvars = appenv.get('envvars', {}) %}
 
+# Setup database using RDS if it exits
 {%- if salt['pillar.get']('rds:db-engine', False) %}
-DB_HOST='{{ salt['grains.get']('dbhost', default='unknown') | replace("'", "'\\''") }}'
-DB_PORT='{{ salt['grains.get']('dbport', default='unknown') | replace("'", "'\\''") }}'
-DB_USERNAME='{{ salt['pillar.get']("rds:db-master-username","") | replace("'", "'\\''") }}'
-DB_PASSWORD='{{ salt['pillar.get']("rds:db-master-password","") | replace("'", "'\\''") }}'
-{% set db_password = pillar['rds']['db-master-password'] | urlencode %}
-DATABASE_URL='{{ "%s://%s:%s@%s:%s/%s" | format(
-                        pillar['rds']['db-engine'],
-                        pillar['rds']['db-master-username'],
-                        db_password,
-                        grains['dbhost'],
-                        grains['dbport'],
-                        pillar['rds']['db-name']) | replace("'", "'\\''")
-              }}'
+{% set db_engine = envvars.get('DB_ENGINE', salt['pillar.get']('rds:db-engine', "")) | urlencode %}
+{% set db_host = envvars.get('DB_HOST', salt['grains.get']('dbhost', default='unknown')) | urlencode %}
+{% set db_port = envvars.get('DB_PORT', salt['grains.get']('dbport', default='unknown')) | urlencode %}
+{% set db_name = envvars.get('DB_NAME', salt['pillar.get']('rds:db-name', "")) | urlencode %}
+{% set db_username = envvars.get('DB_USERNAME', salt['pillar.get']("rds:db-master-username","")) | urlencode %}
+{% set db_password = envvars.get('DB_PASSWORD', salt['pillar.get']("rds:db-master-password","")) | urlencode %}
+DB_ENGINE='{{ db_engine | replace("'", "'\\''") }}'
+DB_HOST='{{ db_host | replace("'", "'\\''") }}'
+DB_PORT='{{ db_port | replace("'", "'\\''") }}'
+DB_NAME='{{ db_name | replace("'", "'\\''") }}'
+DB_USERNAME='{{ db_username | replace("'", "'\\''") }}'
+DB_PASSWORD='{{ db_password | replace("'", "'\\''") }}'
+DATABASE_URL='{{db_engine}}://{{db_username}}:{{db_password}}@{{db_host}}:{{db_port}}/{{db_name}}'
 {% endif %}
 
+# Setup redis using elasticache if it exists
 {%- if salt['grains.get']('ElasticacheReplicationGroupName', False) %}
 REDIS_HOST='{{ salt['grains.get']('elasticache:default_endpoint:Address', default='')  | replace("'", "'\\''") }}'
 REDIS_PORT='{{ salt['grains.get']('elasticache:default_endpoint:Port', default='')  | replace("'", "'\\''") }}'
 REDIS_URL='{{ salt['grains.get']('ElasticacheEngine', default='') }}://{{ salt['grains.get']('elasticache:default_endpoint:Address', default='')  | replace("'", "'\\''") }}:{{ salt['grains.get']('elasticache:default_endpoint:Port', default='')  | replace("'", "'\\''") }}'
 {% endif %}
 
-{%- if 'envvars' in appenv %}
-{% for k, v in appenv.envvars.items() %}
+# Load in container environment variables
+# Note these will override the ones above
+{% for k, v in envvars.items() %}
 {{ k }}='{{ v | replace("'", "'\\''") }}'
 {% endfor %}
-{% endif %}
+
+# These variables should are not overriden by the pillar
+PROJECT='{{ salt['grains.get']('Apps', default='unknown') | replace("'", "'\\''") }}'
+ENV='{{ salt['grains.get']('Env', default='unknown') | replace("'", "'\\''") }}'
+DOCKER_STATE='{{ task | replace("'", "'\\''") }}'
