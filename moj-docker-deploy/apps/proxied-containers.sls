@@ -1,4 +1,4 @@
-# Setup template for proxied containers. 
+# Setup template for proxied containers.
 #
 # Containers will be configured to be created and service
 # jobs setup for them. Nginx will then be set up to proxy
@@ -25,6 +25,26 @@ include:
       appdata: {{appdata | yaml}}
     - watch_in:
       - service: nginx
+
+{% if appdata.get('basic_auth', False) %}
+/etc/nginx/conf.d/{{server_name}}.htpasswd
+  file.managed:
+    - source: salt//moj-docker-deploy/apps/templates/nginx_container.htpasswd
+    - user: root
+    - group: root
+    - mode: 644
+    - template: jinja
+    - context:
+      server_name: {{server_name}}
+      appdata: {{appdata | yaml}}
+    - watch_in:
+      - service: nginx
+{% else %}
+/etc/nginx/conf.d/{{server_name}}.htpasswd
+  file.absent:
+    - watch_in:
+      - service: nginx
+{% endif %}
 
 # Create container configs for all the proxied containers
 {% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
