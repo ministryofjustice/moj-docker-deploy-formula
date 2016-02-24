@@ -33,7 +33,6 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 - [docker_envs](#docker_envs)
 - [nginx_port](#nginx_port)
 - [nginx_logs](#nginx_logs)
-- [basic_auth](#basic_auth)
 - [assets_location](#assets_location)
 - [ssl](#ssl)
 - [proxies](#proxies)
@@ -44,6 +43,7 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 - [name](#name)
 - [initial_version](#initial_version)
 - [registry](#registry)
+- [basic_auth](#basic_auth)
 - [http_locations](#http_locations)
 - [location](#location)
 - [ports](#ports)
@@ -142,23 +142,6 @@ If you want to customize this, you can specify additional (or replacement) forma
 ```
 
 
-###basic_auth
-This key specifies whether basic authentication will be used. If enabled and set to True the required nginx directives are added in the default (location)(#location) specified (or on the default / otherwise)
-```yaml
-	basic_auth: True
-```
-
-In order to provide credentials, one has to specify them in the basic_auth_creds pillar on the same level. Supplied passwords be in hash form as supplied by the htpasswd utility. For more information please visit (ngx_http_auth_basic_module)[http://nginx.org/en/docs/http/ngx_http_auth_basic_module.html]
-
-```yaml
-        docker_envs:
-          example.service.me:
-              basic_auth_creds:
-                  username1: 'HASH'
-                  username2: 'HASH'
-```
-
-
 ###assets_location
 This key specifies the location in nginx to proxy to the S3 bucket. If not specified, the default setting is as shown below.
    
@@ -229,6 +212,25 @@ Note, to use the default docker hub registry you need to set the registry to be 
 ```yaml
             registry:
 ```
+
+###basic_auth
+This key specifies whether basic authentication will be used. If enabled and set to True the required nginx directives are added in the default (location)(#location) specified (or on the default / otherwise)
+```yaml
+	basic_auth: True
+```
+
+In order to provide credentials, one has to specify them in the 'basic_auth_creds' pillar on the same level. Supplied passwords be in hash form as supplied by the htpasswd utility. For more information please visit (ngx_http_auth_basic_module)[http://nginx.org/en/docs/http/ngx_http_auth_basic_module.html]
+
+```yaml
+        docker_envs:
+          example.service.me:
+              containers:
+                container_name:
+                   basic_auth_creds:
+                     username1: 'HASH'
+                     username2: 'HASH'
+```
+
 
 ####http_locations
 Paths listed here will not be redirected to https, this is can be useful for example, for custom ELB checks when you have the SSL redirect enabled. (see [ssl](#ssl))

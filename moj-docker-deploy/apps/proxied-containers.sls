@@ -26,28 +26,29 @@ include:
     - watch_in:
       - service: nginx
 
-{% if appdata.get('basic_auth', False) %}
-/etc/nginx/conf.d/{{server_name}}.htpasswd:
+# Create container configs for all the proxied containers
+{% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
+
+{% if cdata.get('basic_auth', False) %}
+/etc/nginx/conf.d/{{ server_name }}.{{ container }}.htpasswd:
   file.managed:
-    - source: salt//moj-docker-deploy/apps/templates/nginx_container.htpasswd
+    - source: salt://moj-docker-deploy/apps/templates/nginx_container.htpasswd
     - user: root
     - group: root
     - mode: 644
     - template: jinja
     - context:
       server_name: {{server_name}}
-      appdata: {{appdata | yaml}}
+      cdata: {{cdata | yaml}}
     - watch_in:
       - service: nginx
 {% else %}
-/etc/nginx/conf.d/{{server_name}}.htpasswd:
+/etc/nginx/conf.d/{{server_name}}.{{ container }}.htpasswd:
   file.absent:
     - watch_in:
       - service: nginx
 {% endif %}
 
-# Create container configs for all the proxied containers
-{% for container, cdata in appdata.get('containers',{}).items() %} # Start container loop
 {{ macros.create_container_config(container, cdata, server_name) }}
 {{ macros.setup_elb_registering(container) }}
 {% endfor %} # End container loop
