@@ -48,6 +48,8 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 - [location](#location)
 - [ports](#ports)
 - [volumes](#volumes)
+- [links_restarts](#links_restarts)
+- [links](#links)
 - [envvars](#envvars)
 - [enable_clustering](#enable_clustering)
 - [cluster_nodes_prefix](#cluster_nodes_prefix)
@@ -267,11 +269,24 @@ Here we can set the 'host' port, the port which docker forwards into the contain
 ####volumes
 This allows you to mount host volumes in the container.
 
-```yaml        
+```yaml
 	        volumes:
 	          es_vol:
 	            host: /mnt/es_data
 	            container: /data
+```
+
+
+####links_restarts
+If set to True, the init service jobs are set up to restart and re-link if the linked-to containers restart.
+
+####links
+This allows the container to be linked to other containers. The first entry in each key is the external container name, the second is the internal name for the container.
+
+```yaml
+          links:
+	          redis: redis1
+	          hello-external: hello-internal
 ```
 
 ####envvars
