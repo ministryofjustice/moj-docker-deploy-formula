@@ -192,6 +192,13 @@ This is the name of the container as it is tagged in docker
             name: tutum/hello-world
 ```
 
+####extra_headers
+a name-value pair as shown below gets translated directly into the nginx 'add_header' directive.
+
+```yaml        
+            X-Frame-Options: DENY
+```
+
 ####initial_version
 This is the initial version tag of the container to install if there is no other version
 already installed on the intance.
