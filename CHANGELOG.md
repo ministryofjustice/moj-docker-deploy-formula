@@ -1,3 +1,13 @@
+## v1.4.2
+
+Added support for setting arbitrary nginx Headers and Values directly from the Pillar.
+
+## v1.4.1
+Features:
+
+Add support for basic http auth in nginx proxy on a per container basis.
+
+
 ## v1.4.0
 
 Features:
