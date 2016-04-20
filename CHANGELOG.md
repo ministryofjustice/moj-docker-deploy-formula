@@ -1,3 +1,7 @@
+## v1.4.3
+
+Added support for container linking
+
 ## v1.4.2
 
 Added support for setting arbitrary nginx Headers and Values directly from the Pillar.
