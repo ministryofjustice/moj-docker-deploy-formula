@@ -23,7 +23,7 @@ def ensure(desired_tags):
     for v in my_volumes:
       v.add_tags(desired_tags)
   except boto.exception.EC2ResponseError:
-    print "Failed to set tags {}. Perhaps the permisson ec2:CreateTags is missing from the IAM user".format(desired_tags)
+    print "Failed to set tags {}. Perhaps the permission ec2:CreateTags is missing from the IAM user".format(desired_tags)
     # Ideally we'd want to return a 1 here but this aborts the salt run. We don't want to
     # do that to products which might still be on an old stack without that permission.
     sys.exit(0)
