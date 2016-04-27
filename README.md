@@ -48,7 +48,6 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 - [location](#location)
 - [ports](#ports)
 - [volumes](#volumes)
-- [links_restarts](#links_restarts)
 - [links](#links)
 - [envvars](#envvars)
 - [enable_clustering](#enable_clustering)
@@ -277,16 +276,20 @@ This allows you to mount host volumes in the container.
 ```
 
 
-####links_restarts
-If set to True, the init service jobs are set up to restart and re-link if the linked-to containers restart.
-
 ####links
-This allows the container to be linked to other containers. The first entry in each key is the external container name, the second is the internal name for the container.
+This is a list of container linking entries that allows the container to be linked to other containers.
+Each entry contains a required `link` key with the container to link to as a value. By default, the linking container will start and stop in reaction to its target linked containers statuses. 
+An `alias` can also be specified for the container, if not supplied, the default is to use the value of the link key.
+This behaviour can be changed by supplying the `required` key, with the value `False`. This means that we are defining the target container link as non-essential to the running of the linking container.
+This is unlikely to be the behaviour desired in most cases, but may have relevance where the linking container runs a service that will become degraded when the linked-to container is not available, but it is still
+preferable to run a degraded service than run no service at all.
 
 ```yaml
           links:
-	          redis: redis1
-	          hello-external: hello-internal
+            - link: container1			# Link to container1, defaults to 'required: True'
+            - link: container2			# Link to container2
+              alias: inner					# (optional) specify the link alias, equivalent to --links container2:inner
+              required: False 			# (optional) container2 is not required to start this one
 ```
 
 ####envvars
