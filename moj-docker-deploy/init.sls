@@ -3,3 +3,4 @@ include:
  - .apps.containers
  - .deploy-user
  - .tag-ebs-volumes
+ - hardening.unattended-upgrades
