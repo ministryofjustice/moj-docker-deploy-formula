@@ -3,7 +3,7 @@ dependencies:
   - git@github.com:ministryofjustice/nginx-formula.git>=v3.3.1
   - git@github.com:ministryofjustice/repos-formula.git
   - git@github.com:ministryofjustice/admins-formula.git
-  - git@github.com:ministryofjustice/hardening-formula.git
+  - git@github.com:ministryofjustice/hardening-formula.git>=v1.2.4
   - git@github.com:ministryofjustice/bootstrap-formula.git>=v3.0.3
   - git@github.com:ministryofjustice/aws-formula.git>=v0.4.3
 
