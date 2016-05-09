@@ -1,3 +1,15 @@
+## v2.1.0
+* Make unattended upgrades the default setting
+
+## v2.0.0
+* Add alias option to links
+* Use docker introspect running state for checking containers
+* Fix broken error handling on containers missing on introspect
+* Increase retry count to 10
+* Trigger on any parent service started event
+* Add alias to docker link command
+* Change container linking pillar structure
+
 ## v1.4.3
 
 Added support for container linking
