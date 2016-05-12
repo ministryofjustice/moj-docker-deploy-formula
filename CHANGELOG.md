@@ -1,3 +1,7 @@
+## v2.1.2
+
+* Update ntp and python formulas
+
 ## v2.1.1
 
 * Update formulas
