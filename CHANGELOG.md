@@ -1,3 +1,7 @@
+## v2.1.3
+
+* Update python-formula to 1.1.4
+
 ## v2.1.2
 
 * Update ntp and python formulas
