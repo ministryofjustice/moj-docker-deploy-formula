@@ -55,6 +55,7 @@ include:
     - template: jinja
     - context: 
       branch_container_full: {{ branch_container_full }}
+      container_full_name: {{ branch_container_full }}
       branch_name: {{branch_name}}
       cdata: {{ branch_container | yaml}}
       cname: {{ branch_container_name}}
