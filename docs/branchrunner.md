@@ -7,7 +7,8 @@
 ###[2. Setup](#setup)
 
 * [2.1 Pillar Configuration](#pillar-configuration)
-* [2.2 Build and deploy](#build-and-deploy)
+* [2.2 Creating a DNS entry](#creating-a-dns-entry)
+* [2.3 Build and deploy](#build-and-deploy)
 
 ### [3. Known Issues](#known-issues)
 
@@ -27,14 +28,14 @@ It provides separate vhost addresses for each deployed branch container.
 The pillar is configured by adding a branch_runner key that defines,
 
 * `pillar_path`: The key string that points to the pillar vhost/container options to apply to the branch runner container. Usually this will point directly to the main configuration section for the application container.
-* `container_base_hostname`: The hostname to use as the base for the creation of branchrunner vhosts. For example, if the base vhost is `my-app.example.com` then branchrunner will create vhosts pointing to the new containers in the form `my-feature-branch.my-app.example.com`.
+* `container_base_hostname`: The hostname to use as the base for the creation of branchrunner vhosts. For example, if the base vhost is `branch.my-app.example.com` then branchrunner will create vhosts pointing to the new containers in the form `my-feature-branch.branch.my-app.example.com`.
 * `container_to_run`: The name of the container that will be run.
 
 For example, the pillar will usually be in the form below
 
 	branch_runner:
 	  pillar_path: docker_envs:my-app.example.com # Note, this is a string keyed to the config section below
-	  container_base_hostname: my-app.example.com
+	  container_base_hostname: branch.my-app.example.com
 	  container_to_run: my-app
 
 	docker_envs:
@@ -48,6 +49,16 @@ For example, the pillar will usually be in the form below
 	          app:
 	            host: 9080
 	            container: 8080
+
+##### Creating a DNS entry
+
+Branchrunner will create vhosts entries that are subdomains of the main container\_base\_hostname configuration value. For example
+
+	http://my-feature-branch.branch.my-app.example.com
+
+For this address to work, it must be routed to the main address, for example using a wildcard CNAME entry
+
+	*.branch.my-app.example.com.  CNAME  my-app.example.com.
 
 
 ##### Build and deploy
@@ -72,8 +83,8 @@ For example, if we're deploying a branch 'my-feature-branch' for our application
 
 * We should now be able to navigate to the new vhost endpoint
 
-	http://my-feature-branch.my-app.example.com
-	
+	http://my-feature-branch.branch.my-app.example.com
+
 
 ----------------------------------------------------
 
