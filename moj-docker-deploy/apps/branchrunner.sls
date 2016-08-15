@@ -51,7 +51,7 @@ include:
     - user: root
     - group: root
     - mode: 644
-    - source: salt://moj-docker-deploy/apps/templates/upstart_branch_container.conf
+    - source: salt://moj-docker-deploy/apps/templates/upstart_container.conf
     - template: jinja
     - context: 
       branch_container_full: {{ branch_container_full }}
@@ -61,6 +61,8 @@ include:
       cname: {{ branch_container_name}}
       tag: '{{ branch_name }}'
       DATABASE_URL: {{DATABASE_URL}}
+      appdata:
+        branchbuilder: True
 
 {{branch_name}}_service:
   service.running:
