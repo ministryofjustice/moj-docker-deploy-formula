@@ -1,3 +1,5 @@
+{% import 'moj-docker-deploy/apps/libs.sls' as macros with context %}
+
 # Only enable if this pillar key exists
 {% if salt['pillar.get']('branch_runner', False) %}
 include:
@@ -36,6 +38,9 @@ include:
 {% else %}
 {% set DATABASE_URL= "" %}
 {% endif %}
+
+# Create the branchrunners docker_env file
+{{ macros.setup_container_environment_variables(branch_name, branch_container) }}
 
 '{{ branch_name }}_pull':
   docker.pulled:
