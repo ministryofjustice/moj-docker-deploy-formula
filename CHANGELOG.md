@@ -1,3 +1,8 @@
+## v2.1.6
+* Fix branchrunner docker env creation
+* Update branchrunner docs on dns lookup
+* Fix branchrunner container ports
+
 ## v2.1.5
 
 * Fix branchrunner upstart script
