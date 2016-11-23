@@ -1,9 +1,9 @@
 # Macro to pull and setup a service job for a container
-#  
+#
 # Args:
 #   container(string) - The name of the container
 #   cdata(dictionary) - The keyed setup data for the container
-#    
+#
 
 {% macro create_container_config(container, cdata, server_name=None) %}
 
@@ -21,6 +21,23 @@
     - require:
       # We need this for docker-py to find the dockercfg and login
       - environ: HOME
+
+{% if cdata.get('runtime_only', False) %}
+/usr/local/bin/{{container}}_runtime:
+  file.managed:
+    - user: root
+    - group: docker
+    - mode: 750
+    - template: jinja
+    - source: salt://moj-docker-deploy/apps/templates/runtime_container.sh
+    - context:
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
+      cname: {{container}}
+      default_registry: {{ salt['pillar.get']('default_registry', '') }}
+      tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+
+{% else %}
 
 /etc/init/{{container}}_container.conf:
   file.managed:
@@ -47,6 +64,7 @@
 {% if server_name %}
     - require_in:
       - file: /etc/nginx/conf.d/{{ server_name }}.conf
+{% endif %}
 {% endif %}
 {% endmacro %}
 
