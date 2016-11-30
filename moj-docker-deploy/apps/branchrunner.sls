@@ -43,8 +43,9 @@ include:
 {{ macros.setup_container_environment_variables(branch_name, branch_container) }}
 
 '{{ branch_name }}_pull':
-  dockerng.image_present:
-    - name: {{ branch_container_full }}:{{ branch_name }}
+  docker.pulled:
+    - name: {{ branch_container_full }}
+    - tag: '{{ branch_name }}'
     - force: True
     - require:
       # We need this for docker-py to find the dockercfg and login
@@ -75,7 +76,7 @@ include:
     - watch:
       - file: /etc/init/{{branch_name}}_container.conf
       - file: /etc/docker_env.d/{{branch_container_name}}
-      - dockerng: {{ branch_name }}_pull
+      - docker: {{ branch_name }}_pull
     - require_in:
       - file: /etc/nginx/conf.d/{{ branch_name }}.conf
 
