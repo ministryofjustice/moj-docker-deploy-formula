@@ -520,6 +520,33 @@ VALID_CREATE_OPTS = {
 }
 
 
+def _alias_function(fun, name, doc=None):
+    '''
+    Copy a function
+    '''
+    import types
+    alias_fun = types.FunctionType(fun.__code__,
+                                   fun.__globals__,
+                                   name,
+                                   fun.__defaults__,
+                                   fun.__closure__)
+    alias_fun.__dict__.update(fun.__dict__)
+
+    if doc and isinstance(doc, six.string_types):
+        alias_fun.__doc__ = doc
+    else:
+        if six.PY3:
+            orig_name = fun.__name__
+        else:
+            orig_name = fun.func_name
+
+        alias_msg = ('\nThis function is an alias of '
+                     '``{0}``.\n'.format(orig_name))
+        alias_fun.__doc__ = alias_msg + fun.__doc__
+
+    return alias_fun
+
+
 def __virtual__():
     '''
     Only load if docker libs are present
@@ -3071,7 +3098,7 @@ def copy_from(name, source, dest, overwrite=False, makedirs=False):
 
 
 # Docker cp gets a file from the container, alias this to copy_from
-cp = salt.utils.alias_function(copy_from, 'cp')
+cp = _alias_function(copy_from, 'cp')
 
 
 @_ensure_exists
@@ -4618,7 +4645,7 @@ def pause(name):
                             .format(name))}
     return _change_state(name, 'pause', 'paused')
 
-freeze = salt.utils.alias_function(pause, 'freeze')
+freeze = _alias_function(pause, 'freeze')
 
 
 @_ensure_exists
@@ -4813,7 +4840,7 @@ def unpause(name):
                             .format(name))}
     return _change_state(name, 'unpause', 'running')
 
-unfreeze = salt.utils.alias_function(unpause, 'unfreeze')
+unfreeze = _alias_function(unpause, 'unfreeze')
 
 
 def wait(name, ignore_already_stopped=False, fail_on_exit_status=False):

@@ -44,14 +44,926 @@ import traceback
 
 # Import salt libs
 from salt.exceptions import CommandExecutionError, SaltInvocationError
+
 # pylint: disable=no-name-in-module,import-error
-from salt.modules.dockerng import (
-    CLIENT_TIMEOUT,
-    STOP_TIMEOUT,
-    VALID_CREATE_OPTS,
-    _validate_input,
-    _get_repo_tag
-)
+# from salt.modules.dockerng import (
+#     CLIENT_TIMEOUT,
+#     STOP_TIMEOUT,
+#     VALID_CREATE_OPTS,
+#     _validate_input,
+#     _get_repo_tag
+# )
+# default timeout as of docker-py 1.0.0
+def _get_repo_tag(image, default_tag='latest'):
+    '''
+    Resolves the docker repo:tag notation and returns repo name and tag
+    '''
+    if ':' in image:
+        r_name, r_tag = image.rsplit(':', 1)
+        if not r_tag:
+            # Would happen if some wiseguy requests a tag ending in a colon
+            # (e.g. 'somerepo:')
+            log.warning(
+                'Assuming tag \'{0}\' for repo \'{1}\''
+                .format(default_tag, image)
+            )
+            r_tag = default_tag
+    else:
+        r_name = image
+        r_tag = default_tag
+    return r_name, r_tag
+
+CLIENT_TIMEOUT = 60
+# Timeout for stopping the container, before a kill is invoked
+STOP_TIMEOUT = 10
+VALID_CREATE_OPTS = {
+    'command': {
+        'path': 'Config:Cmd',
+        'image_path': 'Config:Cmd',
+    },
+    'hostname': {
+        'validator': 'string',
+        'path': 'Config:Hostname',
+        'get_default_from_container': True,
+    },
+    'domainname': {
+        'validator': 'string',
+        'path': 'Config:Domainname',
+        'get_default_from_container': True,
+    },
+    'interactive': {
+        'api_name': 'stdin_open',
+        'validator': 'bool',
+        'path': 'Config:OpenStdin',
+        'default': False,
+    },
+    'tty': {
+        'validator': 'bool',
+        'path': 'Config:Tty',
+        'default': False,
+    },
+    'user': {
+        'path': 'Config:User',
+        'default': '',
+    },
+    'detach': {
+        'validator': 'bool',
+        'path': ('Config:AttachStdout', 'Config:AttachStderr'),
+        'default': False,
+    },
+    'memory': {
+        'api_name': 'mem_limit',
+        'path': 'HostConfig:Memory',
+        'default': 0,
+    },
+    'memory_swap': {
+        'api_name': 'memswap_limit',
+        'path': 'HostConfig:MemorySwap',
+        'get_default_from_container': True,
+    },
+    'mac_address': {
+        'validator': 'string',
+        'path': 'NetworkSettings:MacAddress',
+        'get_default_from_container': True,
+    },
+    'network_disabled': {
+        'validator': 'bool',
+        'path': 'Config:NetworkDisabled',
+        'default': False,
+    },
+    'ports': {
+        'path': 'Config:ExposedPorts',
+        'image_path': 'Config:ExposedPorts',
+    },
+    'working_dir': {
+        'path': 'Config:WorkingDir',
+        'image_path': 'Config:WorkingDir',
+    },
+    'entrypoint': {
+        'path': 'Config:Entrypoint',
+        'image_path': 'Config:Entrypoint',
+    },
+    'environment': {
+        'path': 'Config:Env',
+        'default': [],
+    },
+    'volumes': {
+        'path': 'Config:Volumes',
+        'image_path': 'Config:Volumes',
+    },
+    'cpu_shares': {
+        'validator': 'number',
+        'path': 'HostConfig:CpuShares',
+        'default': 0,
+    },
+    'cpuset': {
+        'path': 'HostConfig:CpusetCpus',
+        'default': '',
+    },
+    'labels': {
+      'path': 'Config:Labels',
+      'image_path': 'Config:Labels',
+      'default': {},
+    },
+    'binds': {
+        'path': 'HostConfig:Binds',
+        'default': None,
+    },
+    'port_bindings': {
+        'path': 'HostConfig:PortBindings',
+        'default': None,
+    },
+    'lxc_conf': {
+        'validator': 'dict',
+        'path': 'HostConfig:LxcConf',
+        'default': None,
+    },
+    'publish_all_ports': {
+        'validator': 'bool',
+        'path': 'HostConfig:PublishAllPorts',
+        'default': False,
+    },
+    'links': {
+        'path': 'HostConfig:Links',
+        'default': None,
+    },
+    'privileged': {
+        'validator': 'bool',
+        'path': 'HostConfig:Privileged',
+        'default': False,
+    },
+    'dns': {
+        'path': 'HostConfig:Dns',
+        'default': [],
+    },
+    'dns_search': {
+        'validator': 'stringlist',
+        'path': 'HostConfig:DnsSearch',
+        'default': [],
+    },
+    'volumes_from': {
+        'path': 'HostConfig:VolumesFrom',
+        'default': None,
+    },
+    'network_mode': {
+        'path': 'HostConfig:NetworkMode',
+        'default': 'default',
+    },
+    'restart_policy': {
+        'path': 'HostConfig:RestartPolicy',
+        'min_docker': (1, 2, 0),
+        'default': {'MaximumRetryCount': 0, 'Name': ''},
+    },
+    'cap_add': {
+        'validator': 'stringlist',
+        'path': 'HostConfig:CapAdd',
+        'min_docker': (1, 2, 0),
+        'default': None,
+    },
+    'cap_drop': {
+        'validator': 'stringlist',
+        'path': 'HostConfig:CapDrop',
+        'min_docker': (1, 2, 0),
+        'default': None,
+    },
+    'extra_hosts': {
+        'path': 'HostConfig:ExtraHosts',
+        'min_docker': (1, 3, 0),
+        'default': None,
+    },
+    'pid_mode': {
+        'path': 'HostConfig:PidMode',
+        'min_docker': (1, 5, 0),
+        'default': '',
+    },
+}
+
+
+def _validate_input(kwargs,
+                    validate_ip_addrs=True):
+    '''
+    Perform validation on kwargs. Checks each key in kwargs against the
+    VALID_CONTAINER_OPTS dict and if the value is None, looks for a local
+    function named in the format _valid_<kwarg> and calls that.
+
+    The validation functions don't need to return anything, they just need to
+    raise a SaltInvocationError if the validation fails.
+
+    Where needed, this function also performs translation on the input,
+    formatting it in a way that will allow it to be passed to either
+    docker.client.Client.create_container() or
+    docker.client.Client.start().
+    '''
+    # Import here so that these modules are available when _validate_input is
+    # imported into the state module.
+    import os  # pylint: disable=reimported,redefined-outer-name
+    import shlex
+
+    # Simple type validation
+    def _valid_bool(key):  # pylint: disable=unused-variable
+        '''
+        Ensure that the passed value is a boolean
+        '''
+        if not isinstance(kwargs[key], bool):
+            raise SaltInvocationError(key + ' must be True or False')
+
+    def _valid_dict(key):  # pylint: disable=unused-variable
+        '''
+        Ensure that the passed value is a dictionary
+        '''
+        if not isinstance(kwargs[key], dict):
+            raise SaltInvocationError(key + ' must be a dictionary')
+
+    def _valid_number(key):  # pylint: disable=unused-variable
+        '''
+        Ensure that the passed value is an int or float
+        '''
+        if not isinstance(kwargs[key], (six.integer_types, float)):
+            raise SaltInvocationError(
+                key + ' must be a number (integer or floating-point)'
+            )
+
+    def _valid_string(key):  # pylint: disable=unused-variable
+        '''
+        Ensure that the passed value is a string
+        '''
+        if not isinstance(kwargs[key], six.string_types):
+            raise SaltInvocationError(key + ' must be a string')
+
+    def _valid_stringlist(key):  # pylint: disable=unused-variable
+        '''
+        Ensure that the passed value is a list of strings
+        '''
+        if isinstance(kwargs[key], six.string_types):
+            kwargs[key] = kwargs[key].split(',')
+        if not isinstance(kwargs[key], list) \
+                or not all([isinstance(x, six.string_types)
+                            for x in kwargs[key]]):
+            raise SaltInvocationError(key + ' must be a list of strings')
+
+    def _valid_dictlist(key):  # pylint: disable=unused-variable
+        '''
+        Ensure the passed value is a list of dictionaries.
+        '''
+        if not salt.utils.is_dictlist(kwargs[key]):
+            raise SaltInvocationError(key + ' must be a list of dictionaries.')
+
+    # Custom validation functions for container creation options
+    def _valid_command():  # pylint: disable=unused-variable
+        '''
+        Must be either a string or a list of strings. Value will be translated
+        to a list of strings
+        '''
+        if kwargs.get('command') is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['command'], six.string_types):
+            # Translate command into a list of strings
+            try:
+                kwargs['command'] = shlex.split(kwargs['command'])
+            except AttributeError:
+                pass
+        try:
+            _valid_stringlist('command')
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'command/cmd must be a string or list of strings'
+            )
+
+    def _valid_user():  # pylint: disable=unused-variable
+        '''
+        Can be either an integer >= 0 or a string
+        '''
+        if kwargs.get('user') is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['user'], six.string_types) \
+                or isinstance(kwargs['user'], six.integer_types) \
+                and kwargs['user'] >= 0:
+            # Either an int or a string int will work when creating the
+            # container, so just force this to be a string.
+            kwargs['user'] = str(kwargs['user'])
+            return
+        raise SaltInvocationError('user must be a string or a uid')
+
+    def _valid_memory():  # pylint: disable=unused-variable
+        '''
+        must be a positive integer
+        '''
+        if __context__.pop('validation.docker.memory', False):
+            # Don't perform validation again, we already did this
+            return
+        try:
+            kwargs['memory'] = salt.utils.human_size_to_bytes(kwargs['memory'])
+        except ValueError:
+            raise SaltInvocationError(
+                'memory must be an integer, or an integer followed by '
+                'K, M, G, T, or P (example: 512M)'
+            )
+        if kwargs['memory'] < 0:
+            raise SaltInvocationError('memory must be a positive integer')
+        __context__['validation.docker.memory'] = True
+
+    def _valid_memory_swap():  # pylint: disable=unused-variable
+        '''
+        memory_swap can be -1 (swap disabled) or >= memory
+        '''
+        # Ensure that memory was validated first, because we need the munged
+        # version of it below.
+        _valid_memory()
+        try:
+            kwargs['memory_swap'] = \
+                salt.utils.human_size_to_bytes(kwargs['memory_swap'])
+        except ValueError:
+            if kwargs['memory_swap'] == -1:
+                # memory_swap of -1 means swap is disabled
+                return
+            raise SaltInvocationError(
+                'memory must be an integer, or an integer followed by '
+                'K, M, G, T, or P (example: 512M)'
+            )
+        if kwargs['memory_swap'] == 0:
+            # Swap of 0 means unlimited
+            return
+        if kwargs['memory_swap'] < kwargs['memory']:
+            raise SaltInvocationError(
+                'memory_swap cannot be less than memory'
+            )
+
+    def _valid_ports():  # pylint: disable=unused-variable
+        '''
+        Format ports in the documented way:
+        http://docker-py.readthedocs.org/en/stable/port-bindings/
+
+        It's possible to pass this as a dict, and indeed it is returned as such
+        in the inspect output. Passing port configurations as a dict will work
+        with docker-py, but since it is not documented, we will do it as
+        documented to prevent possible breakage in the future.
+        '''
+        if kwargs.get('ports') is None:
+            # no need to validate
+            return
+        if isinstance(kwargs['ports'], six.integer_types):
+            kwargs['ports'] = str(kwargs['ports'])
+        elif isinstance(kwargs['ports'], list):
+            new_ports = [str(x) for x in kwargs['ports']]
+            kwargs['ports'] = new_ports
+        else:
+            try:
+                _valid_stringlist('ports')
+            except SaltInvocationError:
+                raise SaltInvocationError(
+                    'ports must be a comma-separated list or Python list'
+                )
+        new_ports = []
+        for item in kwargs['ports']:
+            # Have to run str() here again in case the ports were passed in a
+            # Python list instead of a string.
+            port_num, _, protocol = str(item).partition('/')
+            if not port_num.isdigit():
+                raise SaltInvocationError(
+                    'Invalid port number \'{0}\' in \'ports\' argument'
+                    .format(port_num)
+                )
+            else:
+                port_num = int(port_num)
+            lc_protocol = protocol.lower()
+            if lc_protocol == 'tcp':
+                protocol = ''
+            elif lc_protocol == 'udp':
+                protocol = lc_protocol
+            elif lc_protocol != '':
+                raise SaltInvocationError(
+                    'Invalid protocol \'{0}\' for port {1} in \'ports\' '
+                    'argument'.format(protocol, port_num)
+                )
+            if protocol:
+                new_ports.append((port_num, protocol))
+            else:
+                new_ports.append(port_num)
+        kwargs['ports'] = new_ports
+
+    def _valid_working_dir():  # pylint: disable=unused-variable
+        '''
+        Must be an absolute path
+        '''
+        if kwargs.get('working_dir') is None:
+            # No need to validate
+            return
+        _valid_string('working_dir')
+        if not os.path.isabs(kwargs['working_dir']):
+            raise SaltInvocationError('working_dir must be an absolute path')
+
+    def _valid_entrypoint():  # pylint: disable=unused-variable
+        '''
+        Must be a string or list of strings
+        '''
+        if kwargs.get('entrypoint') is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['entrypoint'], six.string_types):
+            # Translate entrypoint into a list of strings
+            try:
+                kwargs['entrypoint'] = shlex.split(kwargs['entrypoint'])
+            except AttributeError:
+                pass
+        try:
+            _valid_stringlist('entrypoint')
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'entrypoint must be a string or list of strings'
+            )
+
+    def _valid_environment():  # pylint: disable=unused-variable
+        '''
+        Can be a list of VAR=value strings, a dictionary, or a single env var
+        represented as a string. Data will be munged into a dictionary.
+        '''
+        if kwargs.get('environment') is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['environment'], list):
+            repacked_env = {}
+            for env_var in kwargs['environment']:
+                try:
+                    key, val = env_var.split('=')
+                except AttributeError:
+                    raise SaltInvocationError(
+                        'Invalid environment variable definition \'{0}\''
+                        .format(env_var)
+                    )
+                else:
+                    if key in repacked_env:
+                        raise SaltInvocationError(
+                            'Duplicate environment variable \'{0}\''
+                            .format(key)
+                        )
+                    if not isinstance(val, six.string_types):
+                        raise SaltInvocationError(
+                            'Environment values must be strings {key}={val!r}'
+                            .format(key=key, val=val))
+                    repacked_env[key] = val
+            kwargs['environment'] = repacked_env
+        elif isinstance(kwargs['environment'], dict):
+            for key, val in six.iteritems(kwargs['environment']):
+                if not isinstance(val, six.string_types):
+                    raise SaltInvocationError(
+                        'Environment values must be strings {key}={val!r}'
+                        .format(key=key, val=val))
+        elif not isinstance(kwargs['environment'], dict):
+            raise SaltInvocationError(
+                'Invalid environment configuration. See the documentation for '
+                'proper usage.'
+            )
+
+    def _valid_volumes():  # pylint: disable=unused-variable
+        '''
+        Must be a list of absolute paths
+        '''
+        if kwargs.get('volumes') is None:
+            # No need to validate
+            return
+        try:
+            _valid_stringlist('volumes')
+            if not all(os.path.isabs(x) for x in kwargs['volumes']):
+                raise SaltInvocationError()
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'volumes must be a list of absolute paths'
+            )
+
+    def _valid_cpuset():  # pylint: disable=unused-variable
+        '''
+        Must be a string. If a string integer is passed, convert it to a
+        string.
+        '''
+        if kwargs.get('cpuset') is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['cpuset'], six.integer_types):
+            kwargs['cpuset'] = str(kwargs['cpuset'])
+        try:
+            _valid_string('cpuset')
+        except SaltInvocationError:
+            raise SaltInvocationError('cpuset must be a string or integer')
+
+    # Custom validation functions for runtime options
+    def _valid_binds():  # pylint: disable=unused-variable
+        '''
+        Must be a string or list of strings with bind mount information
+        '''
+        if kwargs.get('binds') is None:
+            # No need to validate
+            return
+        err = (
+            'Invalid binds configuration. See the documentation for proper '
+            'usage.'
+        )
+        if isinstance(kwargs['binds'], six.integer_types):
+            kwargs['binds'] = str(kwargs['binds'])
+        try:
+            _valid_stringlist('binds')
+        except SaltInvocationError:
+            raise SaltInvocationError(err)
+        new_binds = {}
+        for bind in kwargs['binds']:
+            bind_parts = bind.split(':')
+            num_bind_parts = len(bind_parts)
+            if num_bind_parts == 2:
+                host_path, container_path = bind_parts
+                read_only = False
+            elif num_bind_parts == 3:
+                host_path, container_path, read_only = bind_parts
+                if read_only == 'ro':
+                    read_only = True
+                elif read_only == 'rw':
+                    read_only = False
+                else:
+                    raise SaltInvocationError(
+                        'Invalid read-only configuration for bind {0}, must '
+                        'be either \'ro\' or \'rw\''
+                        .format(host_path + '/' + container_path)
+                    )
+            else:
+                raise SaltInvocationError(err)
+
+            if not os.path.isabs(host_path):
+                if os.path.sep in host_path:
+                    raise SaltInvocationError(
+                        'Host path {0} in bind {1} is not absolute'
+                        .format(container_path, bind)
+                    )
+                log.warn('Host path {0} in bind {1} is not absolute,'
+                         ' assuming it is a docker volume.'.format(host_path,
+                                                                   bind))
+            if not os.path.isabs(container_path):
+                raise SaltInvocationError(
+                    'Container path {0} in bind {1} is not absolute'
+                    .format(container_path, bind)
+                )
+            new_binds[host_path] = {'bind': container_path, 'ro': read_only}
+        kwargs['binds'] = new_binds
+
+    def _valid_links():  # pylint: disable=unused-variable
+        '''
+        Must be a list of colon-delimited mappings
+        '''
+        if kwargs.get('links') is None:
+            # No need to validate
+            return
+        err = 'Invalid format for links. See documentaion for proper usage.'
+        try:
+            _valid_stringlist('links')
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'links must be a comma-separated list or Python list'
+            )
+        new_links = []
+        for item in kwargs['links']:
+            try:
+                link_name, link_alias = item.split(':')
+            except ValueError:
+                raise SaltInvocationError(err)
+            else:
+                if not link_name.startswith('/'):
+                    # Normalize container name to make comparisons simpler
+                    link_name = '/' + link_name
+            new_links.append((link_name, link_alias))
+        kwargs['links'] = new_links
+
+    def _valid_dns():  # pylint: disable=unused-variable
+        '''
+        Must be a list of mappings or a dictionary
+        '''
+        if kwargs.get('dns') is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['dns'], six.string_types):
+            kwargs['dns'] = kwargs['dns'].split(',')
+        if not isinstance(kwargs['dns'], list):
+            raise SaltInvocationError(
+                'dns must be a comma-separated list or Python list'
+            )
+        if validate_ip_addrs:
+            errors = []
+            for addr in kwargs['dns']:
+                try:
+                    if not salt.utils.network.is_ip(addr):
+                        errors.append(
+                            'dns nameserver \'{0}\' is not a valid IP address'
+                            .format(addr)
+                        )
+                except RuntimeError:
+                    pass
+            if errors:
+                raise SaltInvocationError('; '.join(errors))
+
+    def _valid_port_bindings():  # pylint: disable=unused-variable
+        '''
+        Must be a string or list of strings with port binding information
+        '''
+        if kwargs.get('port_bindings') is None:
+            # No need to validate
+            return
+        err = (
+            'Invalid port_bindings configuration. See the documentation for '
+            'proper usage.'
+        )
+        if isinstance(kwargs['port_bindings'], six.integer_types):
+            kwargs['port_bindings'] = str(kwargs['port_bindings'])
+        try:
+            _valid_stringlist('port_bindings')
+        except SaltInvocationError:
+            raise SaltInvocationError(err)
+        new_port_bindings = {}
+        for binding in kwargs['port_bindings']:
+            bind_parts = binding.split(':')
+            num_bind_parts = len(bind_parts)
+            if num_bind_parts == 1:
+                container_port = str(bind_parts[0])
+                if container_port == '':
+                    raise SaltInvocationError(err)
+                bind_val = None
+            elif num_bind_parts == 2:
+                if any(x == '' for x in bind_parts):
+                    raise SaltInvocationError(err)
+                host_port, container_port = bind_parts
+                if not host_port.isdigit():
+                    raise SaltInvocationError(
+                        'Invalid host port \'{0}\' for port {1} in '
+                        'port_bindings'.format(host_port, container_port)
+                    )
+                bind_val = int(host_port)
+            elif num_bind_parts == 3:
+                host_ip, host_port, container_port = bind_parts
+                if validate_ip_addrs:
+                    try:
+                        if not salt.utils.network.is_ip(host_ip):
+                            raise SaltInvocationError(
+                                'Host IP \'{0}\' in port_binding {1} is not a '
+                                'valid IP address'.format(host_ip, binding)
+                            )
+                    except RuntimeError:
+                        pass
+                if host_port == '':
+                    bind_val = (host_ip,)
+                elif not host_port.isdigit():
+                    raise SaltInvocationError(
+                        'Invalid host port \'{0}\' for port {1} in '
+                        'port_bindings'.format(host_port, container_port)
+                    )
+                else:
+                    bind_val = (host_ip, int(host_port))
+            else:
+                raise SaltInvocationError(err)
+            port_num, _, protocol = container_port.partition('/')
+            if not port_num.isdigit():
+                raise SaltInvocationError(
+                    'Invalid container port number \'{0}\' in '
+                    'port_bindings argument'.format(port_num)
+                )
+            lc_protocol = protocol.lower()
+            if lc_protocol in ('', 'tcp'):
+                container_port = int(port_num)
+            elif lc_protocol == 'udp':
+                container_port = port_num + '/' + lc_protocol
+            else:
+                raise SaltInvocationError(err)
+            new_port_bindings.setdefault(container_port, []).append(bind_val)
+        kwargs['port_bindings'] = new_port_bindings
+
+    def _valid_volumes_from():  # pylint: disable=unused-variable
+        '''
+        Must be a string or list of strings
+        '''
+        if isinstance(kwargs['volumes_from'], six.integer_types):
+            # Handle cases where a container's name is numeric
+            kwargs['volumes_from'] = str(kwargs['volumes_from'])
+        try:
+            _valid_stringlist('volumes_from')
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'volumes_from must be a string or list of strings'
+            )
+
+    def _valid_network_mode():  # pylint: disable=unused-variable
+        '''
+        Must be one of several possible string types
+        '''
+        if kwargs.get('network_mode') is None:
+            # No need to validate
+            return
+        try:
+            _valid_string('network_mode')
+            if kwargs['network_mode'] in ('bridge', 'host'):
+                return
+            elif kwargs['network_mode'].startswith('container:') \
+                    and kwargs['network_mode'] != 'container:':
+                # Ensure that the user didn't just pass 'container:', because
+                # that would be invalid.
+                return
+            else:
+                # just a name assume it is a network
+                log.info(
+                    'Assuming network_mode \'{0}\' is a network.'.format(
+                      kwargs['network_mode'])
+                )
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'network_mode must be one of \'bridge\', \'host\', '
+                '\'container:<id or name>\' or a name of a network.'
+            )
+
+    def _valid_restart_policy():  # pylint: disable=unused-variable
+        '''
+        Must be one of several possible string types
+        '''
+        if kwargs['restart_policy'] is None:
+            # No need to validate
+            return
+        if isinstance(kwargs['restart_policy'], six.string_types):
+            try:
+                pol_name, count = kwargs['restart_policy'].split(':')
+            except ValueError:
+                pol_name = kwargs['restart_policy']
+                count = '0'
+            if not count.isdigit():
+                raise SaltInvocationError(
+                    'Invalid retry count \'{0}\' in restart_policy, '
+                    'must be an integer'.format(count)
+                )
+            count = int(count)
+            if pol_name == 'always' and count != 0:
+                log.warning(
+                    'Using \'always\' restart_policy. Retry count will '
+                    'be ignored.'
+                )
+                count = 0
+            kwargs['restart_policy'] = {'Name': pol_name,
+                                        'MaximumRetryCount': count}
+
+    def _valid_extra_hosts():  # pylint: disable=unused-variable
+        '''
+        Must be a list of host:ip mappings
+        '''
+        if kwargs.get('extra_hosts') is None:
+            # No need to validate
+            return
+        try:
+            _valid_stringlist('extra_hosts')
+        except SaltInvocationError:
+            raise SaltInvocationError(
+                'extra_hosts must be a comma-separated list or Python list'
+            )
+        err = (
+            'Invalid format for extra_hosts. See documentaion for proper '
+            'usage.'
+        )
+        errors = []
+        new_extra_hosts = {}
+        for item in kwargs['extra_hosts']:
+            try:
+                host_name, ip_addr = item.split(':')
+            except ValueError:
+                raise SaltInvocationError(err)
+
+            if validate_ip_addrs:
+                try:
+                    if not salt.utils.network.is_ip(ip_addr):
+                        errors.append(
+                            'Address \'{0}\' for extra_host \'{0}\' is not a '
+                            'valid IP address'
+                        )
+                except RuntimeError:
+                    pass
+            new_extra_hosts[host_name] = ip_addr
+        if errors:
+            raise SaltInvocationError('; '.join(errors))
+
+        kwargs['extra_hosts'] = new_extra_hosts
+
+    def _valid_pid_mode():  # pylint: disable=unused-variable
+        '''
+        Can either be None or 'host'
+        '''
+        if kwargs.get('pid_mode') not in (None, 'host'):
+            raise SaltInvocationError(
+                'pid_mode can only be \'host\', if set'
+            )
+
+    def _valid_labels():  # pylint: disable=unused-variable
+        '''
+        Must be a dict or a list of strings
+        '''
+        if kwargs.get('labels') is None:
+            return
+        try:
+            _valid_stringlist('labels')
+        except SaltInvocationError:
+            try:
+                _valid_dictlist('labels')
+            except SaltInvocationError:
+                try:
+                    _valid_dict('labels')
+                except SaltInvocationError:
+                    raise SaltInvocationError(
+                        'labels can only be a list of strings/dict'
+                        ' or a dict containing strings')
+                else:
+                    new_labels = {}
+                    for k, v in six.iteritems(kwargs['labels']):
+                        new_labels[str(k)] = str(v)
+                    kwargs['labels'] = new_labels
+            else:
+                kwargs['labels'] = salt.utils.repack_dictlist(kwargs['labels'])
+
+    # And now, the actual logic to perform the validation
+    if 'docker.docker_version' not in __context__:
+        # Have to call this func using the __salt__ dunder (instead of just
+        # version()) because this _validate_input() will be imported into the
+        # state module, and the state module won't have a version() func.
+        _version = __salt__['dockerng.version']()
+        if 'VersionInfo' not in _version:
+            log.warning(
+                'Unable to determine docker version. Feature version checking '
+                'will be unavailable.'
+            )
+            docker_version = None
+        else:
+            docker_version = _version['VersionInfo']
+        __context__['docker.docker_version'] = docker_version
+
+    _locals = locals()
+    for kwarg in kwargs:
+        if kwarg not in VALID_CREATE_OPTS:
+            raise SaltInvocationError('Invalid argument \'{0}\''.format(kwarg))
+
+        # Check for Docker/docker-py compatibility
+        compat_errors = []
+        if 'min_docker' in VALID_CREATE_OPTS[kwarg]:
+            min_docker = VALID_CREATE_OPTS[kwarg]['min_docker']
+            if __context__['docker.docker_version'] is not None:
+                if __context__['docker.docker_version'] < min_docker:
+                    compat_errors.append(
+                        'The \'{0}\' parameter requires at least Docker {1} '
+                        '(detected version {2})'.format(
+                            kwarg,
+                            '.'.join(map(str, min_docker)),
+                            '.'.join(__context__['docker.docker_version'])
+                        )
+                    )
+        if 'min_docker_py' in VALID_CREATE_OPTS[kwarg]:
+            cur_docker_py = _get_docker_py_versioninfo()
+            if cur_docker_py is not None:
+                min_docker_py = VALID_CREATE_OPTS[kwarg]['min_docker_py']
+                if cur_docker_py < min_docker_py:
+                    compat_errors.append(
+                        'The \'{0}\' parameter requires at least docker-py '
+                        '{1} (detected version {2})'.format(
+                            kwarg,
+                            '.'.join(map(str, min_docker_py)),
+                            '.'.join(map(str, cur_docker_py))
+                        )
+                    )
+        if compat_errors:
+            raise SaltInvocationError('; '.join(compat_errors))
+
+        default_val = VALID_CREATE_OPTS[kwarg].get('default')
+        if kwargs[kwarg] is None:
+            if default_val is None:
+                # Passed as None and None is the default. Skip validation. This
+                # catches cases where user explicitly passes a value of None.
+                continue
+            else:
+                # User explicitly passed None for an option that cannot be
+                # None, don't let them do this.
+                raise SaltInvocationError(kwarg + ' cannot be None')
+
+        validator = VALID_CREATE_OPTS[kwarg].get('validator')
+        if validator is None:
+            # Look for custom validation function
+            validator = kwarg
+            validation_arg = ()
+        else:
+            validation_arg = (kwarg,)
+        key = '_valid_' + validator
+        if key not in _locals:
+            raise SaltInvocationError(
+                'Validator function missing for argument \'{0}\'. Please '
+                'report this.'.format(kwarg)
+            )
+        # Run validation function
+        _locals[key](*validation_arg)
+
+    # Clear any context variables created during validation process
+    for key in list(__context__):
+        try:
+            if key.startswith('validation.docker.'):
+                __context__.pop(key)
+        except AttributeError:
+            pass
+
+
 # pylint: enable=no-name-in-module,import-error
 import salt.utils
 import salt.ext.six as six
