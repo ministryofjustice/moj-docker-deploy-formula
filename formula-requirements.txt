@@ -2,7 +2,7 @@ ministryofjustice/nginx-formula==v3.3.4
 ministryofjustice/apparmor-formula==v1.0.1
 ministryofjustice/aws-formula==v0.6.0
 ministryofjustice/admins-formula==v1.3.1
-ministryofjustice/docker-formula==v1.4.2
+ministryofjustice/docker-formula==v1.4.0
 ministryofjustice/ntp-formula==v1.1.8
 ministryofjustice/python-formula==v1.1.5
 ministryofjustice/hardening-formula==v1.2.5
