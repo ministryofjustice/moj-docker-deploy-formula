@@ -14,9 +14,8 @@
 {% set default_version = cdata.get('initial_version', 'latest') %}
 
 {{ container }}_pull:
-  docker.pulled:
-    - name: {{ container_full_name }}
-    - tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+  dockerng.image_present:
+    - name: {{ container_full_name }}:{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}
     - force: True
     - require:
       # We need this for docker-py to find the dockercfg and login
@@ -43,7 +42,7 @@
     - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
-      - docker: {{ container }}_pull
+      - dockerng: {{ container }}_pull
 {% if server_name %}
     - require_in:
       - file: /etc/nginx/conf.d/{{ server_name }}.conf
@@ -75,7 +74,7 @@
     - watch:
       - file: /etc/init/{{container}}_container.conf
       - file: /etc/docker_env.d/{{container}}
-      - docker: {{container}}_pull
+      - dockerng: {{container}}_pull
 
 {{ container }}_{{ lb }}_up:
   elb_reg.instance_registered:
