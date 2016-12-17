@@ -44,7 +44,7 @@ def _instance_out_of_service(name, region, instance):
             return True
 
 
-def instance_registered(name, instance, timeout=310, region='eu-west-1'):
+def instance_registered(name, instance, timeout=310, region=get_region()):
     '''
     Salt state that ensures that an instance is registered and
     InService on a given ELB.
@@ -82,7 +82,7 @@ def instance_registered(name, instance, timeout=310, region='eu-west-1'):
     return ret
 
 
-def instance_deregistered(name, instance, timeout=310, region='eu-west-1'):
+def instance_deregistered(name, instance, timeout=310, region=get_region()):
     '''
     Salt state that ensures that an instance is deregistered and
     OutOfService on a given ELB.
@@ -118,3 +118,9 @@ def instance_deregistered(name, instance, timeout=310, region='eu-west-1'):
     else:
         ret['comment'] += 'Instance not OutOfService'
     return ret
+
+
+def get_region():
+  instance_identity = boto.utils.get_instance_identity(timeout=5, num_retries=2)
+  instance_region = instance_identity['document']['region']
+  return instance_region
