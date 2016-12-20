@@ -44,13 +44,14 @@ def _instance_out_of_service(name, region, instance):
             return True
 
 
-def instance_registered(name, instance, timeout=310, region=get_region()):
+def instance_registered(name, instance, timeout=310, region=None):
     '''
     Salt state that ensures that an instance is registered and
     InService on a given ELB.
     The timeout should be sufficient for the healthcheck on the ELB to pass.
     '''
-
+    if region is None:
+        region = get_region()
     ret = {
         'name': name,
         'changes': {},
@@ -82,7 +83,7 @@ def instance_registered(name, instance, timeout=310, region=get_region()):
     return ret
 
 
-def instance_deregistered(name, instance, timeout=310, region=get_region()):
+def instance_deregistered(name, instance, timeout=310, region=None):
     '''
     Salt state that ensures that an instance is deregistered and
     OutOfService on a given ELB.
@@ -90,7 +91,8 @@ def instance_deregistered(name, instance, timeout=310, region=get_region()):
     instance once it is deregistered. i.e. you should set the timeout here
     to be slightly greater than the connection draining time on the ELB.
     '''
-
+    if region is None:
+        region = get_region()
     ret = {
         'name': name,
         'changes': {},
