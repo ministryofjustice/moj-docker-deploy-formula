@@ -3,11 +3,15 @@
 import boto
 import sys
 import boto.ec2
+import boto.utils
 import requests
 
-conn = boto.ec2.connect_to_region('eu-west-1')
-my_instance_id = requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
-my_volumes = [v for v in conn.get_all_volumes() if v.attach_data.instance_id == my_instance_id]
+instance_metadata = boto.utils.get_instance_metadata(timeout=5, num_retries=2)
+instance_identity = boto.utils.get_instance_identity(timeout=5, num_retries=2)
+instance_id = instance_metadata['instance-id']
+instance_region = instance_identity['document']['region']
+conn = boto.ec2.connect_to_region(instance_region)
+my_volumes = [v for v in conn.get_all_volumes() if v.attach_data.instance_id == instance_id]
 
 def query(expected_tags):
   for v in my_volumes:
