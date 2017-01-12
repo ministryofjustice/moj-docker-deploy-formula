@@ -2078,7 +2078,7 @@ def images(verbose=False, **kwargs):
                 continue
             for item in img:
                 img_state = 'untagged' \
-                    if img['RepoTags'] == ['<none>:<none>'] \
+                    if img['RepoTags'] in (['<none>:<none>'], None) \
                     else 'tagged'
                 bucket = __context__.setdefault('docker.images', {})
                 bucket = bucket.setdefault(img_state, {})
@@ -2259,8 +2259,9 @@ def list_tags():
     '''
     ret = set()
     for item in six.itervalues(images()):
-        for repo_tag in item['RepoTags']:
-            ret.add(repo_tag)
+        if not item.get('RepoTags'):
+            continue
+        ret.update(set(item['RepoTags']))
     return sorted(ret)
 
 
