@@ -308,13 +308,14 @@ The automatic values below cannot be overridden
 
 - *ENV*: The environment you specify in the fab command
 - *PROJECT*: The application name you specify in the fab command
-- *DATABASE_URL*: The RDS database url, in the form DB_ENGINE://DB_USERNAME:DB_PASSWORD@DB_HOST:DB_PORT/DB_NAME
+- *DATABASE_URL*: The RDS database url, in the form `<DB_ENGINE>:/<DB_USERNAME>:<DB_PASSWORD>@<DB_HOST>:<DB_PORT>/<DB_NAME>`
 
 The following automatic values can be overriden in the pillar 
 
 - *DB_ENGINE*: The RDS engine
 - *DB_HOST*: The RDS hostname
 - *DB_PORT*: The RDS port
+- *DB_NAME*: The database name
 - *DB_USERNAME*: The RDS username set in the cloudformation yaml
 - *DB_PASSWORD*: The RDS password set in the cloudformation yaml
 
