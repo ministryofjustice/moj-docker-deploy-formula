@@ -47,6 +47,9 @@
     - require_in:
       - file: /etc/nginx/conf.d/{{ server_name }}.conf
 {% endif %}
+    - check_cmd:
+        - sleep {{ cdata.get('initial_delay', 1)}} && docker inspect {{ container }}
+
 {% endmacro %}
 
 # Macro to register and de-register a container with elbs
