@@ -1,6 +1,6 @@
 import time
 import logging
-
+import boto
 
 def do_timeout(timeout, interval):
     def decorate(func):
