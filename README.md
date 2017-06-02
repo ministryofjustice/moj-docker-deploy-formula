@@ -90,7 +90,7 @@ Settings specific to nginx
 nginx:
   version: 1.4.6-1ubuntu3.3
 ```
-	  
+
 ------------------------------------------------------
 ## #Docker Environment Settings
 ### docker_envs
@@ -102,7 +102,7 @@ docker_envs:
 This is a dictionary of docker environments keyed by the server name for your vhost.
 
 ```yaml
-	dev.blah.dsd.io:
+    dev.blah.dsd.io:
 ```
 
 ### nginx_port
@@ -147,33 +147,33 @@ If you want to customize this, you can specify additional (or replacement) forma
 This key specifies the location in nginx to proxy to the S3 bucket. If not specified, the default setting is as shown below.
 
 ```yaml
-    	assets_location: /assets
+        assets_location: /assets
 ```
 
 ### ssl
 This is the section to specify ssl settings. Below we set 'redirect' to True, if you enable this and have a custom health check on your ELB you will also want to add the health-check location to [http_locations](#http_locations) to allow pass-through of non-https connections to those locations. If not specified, the default setting is as shown below.
 
 ```yaml
-	    ssl:
-	      redirect: True
+        ssl:
+          redirect: True
 ```
 
 ### proxies
 You can use the following to specify arbitrary proxies to other hosts or upstreams.
 
 ```yaml
-	    proxies:
-	      - location: /some-random-bucket
-	        upstream: https://mmb-test.s3-eu-west-1.amazonaws.com
-	        host_header: mmb-test.s3.amazonaws.com
+        proxies:
+          - location: /some-random-bucket
+            upstream: https://mmb-test.s3-eu-west-1.amazonaws.com
+            host_header: mmb-test.s3.amazonaws.com
 ```
 
 ### server_names
 If you need your vhost to respond to other cnames include them here
 
 ```yaml
-	    server_names:
-	      - cname.blah.dsd.io
+        server_names:
+          - cname.blah.dsd.io
 ```
 
 ------------------------------------------------------
@@ -182,8 +182,8 @@ If you need your vhost to respond to other cnames include them here
 The containers subsection is used to define containers which respond to HTTP and should be put behind an nginx reverse proxy. Each container must define at least one exposed port labeled app. Each entry is a dictionary of container name keys mapped to the containers specific settings. The key is a custom name for the container, it can be anything and is used by salt to name upstart jobs and for the deploy task. 
 
 ```yaml
-	    containers:
-	      another_app:
+        containers:
+          another_app:
 ```
 
 #### name
@@ -224,7 +224,7 @@ Note, to use the default docker hub registry you need to set the registry to be 
 ### basic_auth
 This key specifies whether basic authentication will be used. If enabled and set to True the required nginx directives are added in the default (location)(#location) specified (or on the default / otherwise)
 ```yaml
-	basic_auth: True
+    basic_auth: True
 ```
 
 In order to provide credentials, one has to specify them in the 'basic_auth_creds' pillar on the same level. Supplied passwords be in hash form as supplied by the htpasswd utility. For more information please visit (ngx_http_auth_basic_module)[http://nginx.org/en/docs/http/ngx_http_auth_basic_module.html]
@@ -232,11 +232,11 @@ In order to provide credentials, one has to specify them in the 'basic_auth_cred
 ```yaml
         docker_envs:
           example.service.me:
-              containers:
-                container_name:
-                   basic_auth_creds:
-                     username1: 'HASH'
-                     username2: 'HASH'
+            containers:
+              container_name:
+                basic_auth_creds:
+                  username1: 'HASH'
+                  username2: 'HASH'
 ```
 
 
@@ -244,8 +244,8 @@ In order to provide credentials, one has to specify them in the 'basic_auth_cred
 Paths listed here will not be redirected to https, this is can be useful for example, for custom ELB checks when you have the SSL redirect enabled. (see [ssl](#ssl))
 
 ```
-	        http_locations:
-	          - /ping.json
+            http_locations:
+              - /ping.json
 ```
 
 #### location
@@ -259,20 +259,20 @@ This is the nginx location that is mapped to the container
 Here we can set the 'host' port, the port which docker forwards into the container. It can be anything as long as it's not in use on the host and is automatically set as an nginx upstream. The 'container' port is the port that the process in the container is listening on.
 
 ```yaml
-	        ports:
-	          app:
-	            host: 9080
-	            container: 80
+            ports:
+              app:
+                host: 9080
+                container: 80
 ```
 
 #### volumes
 This allows you to mount host volumes in the container.
 
 ```yaml
-	        volumes:
-	          es_vol:
-	            host: /mnt/es_data
-	            container: /data
+            volumes:
+              es_vol:
+                host: /mnt/es_data
+                container: /data
 ```
 
 
@@ -286,10 +286,10 @@ preferable to run a degraded service than run no service at all.
 
 ```yaml
           links:
-            - link: container1			# Link to container1, defaults to 'required: True'
-            - link: container2			# Link to container2
-              alias: inner					# (optional) specify the link alias, equivalent to --links container2:inner
-              required: False 			# (optional) container2 is not required to start this one
+            - link: container1            # Link to container1, defaults to 'required: True'
+            - link: container2            # Link to container2
+              alias: inner                    # (optional) specify the link alias, equivalent to --links container2:inner
+              required: False             # (optional) container2 is not required to start this one
 ```
 
 #### envvars
@@ -298,9 +298,9 @@ preferable to run a degraded service than run no service at all.
 These environment variables will be set in the container, these will often be a place where usernames and passwords are stored so make sure sensitive information goes into a corresponding secrets file.
 
 ```yaml
-	        envvars:
-	          ENV_VAR1: value
-	          ENV_VAR2: value2
+          envvars:
+            ENV_VAR1: value
+            ENV_VAR2: value2
 ```
 
 Note you get some free variables for database details etc, the following will be set in the container automatically.
@@ -325,7 +325,7 @@ The following automatic values can be overriden in the pillar
 When set to True, clustering of containers with ports exposed on their hosts will be enabled. In practice, this means that other EC2 hosts and containers DNS resolvable inside a container, and a list of nodes will be exposed via environmental variables. See https://github.com/ministryofjustice/template-deploy#clustering_containers for more details.
 
 ```yaml
-	enable_clustering: True
+    enable_clustering: True
 ```
 
 #### cluster\_nodes\_prefix
@@ -333,7 +333,7 @@ When set to True, clustering of containers with ports exposed on their hosts wil
 To add a prefix to cluster nodes lists.
 
 ```yaml
-	cluster_nodes_prefix: 'someprefix-'
+    cluster_nodes_prefix: 'someprefix-'
 ```
 
 ------------------------------------------------------
