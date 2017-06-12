@@ -48,6 +48,7 @@ For more help in resolving problems and errors, see the [Template Deploy Trouble
 - [location](#location)
 - [ports](#ports)
 - [volumes](#volumes)
+- [ulimits](#ulimits)
 - [links](#links)
 - [envvars](#envvars)
 - [enable_clustering](#enable_clustering)
@@ -275,6 +276,16 @@ This allows you to mount host volumes in the container.
                 container: /data
 ```
 
+#### ulimits options
+Certain docker containers need certain limited raised or lifted altogether. All ulimit options supported by docker can be set here. Example:
+
+```yaml
+	    ulimits:
+	      memlock: -1:-1
+	      nofile: 1024:1024 
+```
+
+The format is `<type>: <soft limit>[:<hard limit>]`. These options are passed as-is to the docker run command. For more information on supported values/options, please consult <https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container-ulimit> . 
 
 #### links
 This is a list of container linking entries that allows the container to be linked to other containers.
