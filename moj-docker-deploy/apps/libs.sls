@@ -50,6 +50,42 @@
     - check_cmd:
         - sleep {{ cdata.get('initial_delay', 1)}} && docker inspect {{ container }}
 
+# Systemd services
+reload_systemctl_unit_{{container}}:
+  cmd.run:
+    - name:  command -v systemctl >/dev/null 2>&1 && systemctl daemon-reload
+    - onchanges:
+      - file: /etc/systemd/system/{{container}}_container.service
+
+/etc/systemd/system/{{container}}_container.service:
+  file.managed:
+    - user: root
+    - group: root
+    - mode: 644
+    - source: salt://moj-docker-deploy/apps/templates/systemd_container.conf
+    - template: jinja
+    - context: 
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
+      cname: {{container}}
+      default_registry: {{ salt['pillar.get']('default_registry', '') }}
+      tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+
+/usr/share/moj-docker-deploy/run_container_{{container}}.sh:
+  file.managed:
+    - user: root
+    - group: root
+    - mode: 755
+    - source: salt://moj-docker-deploy/apps/templates/scripts/run_container.sh
+    - template: jinja
+    - context:
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
+      cname: {{container}}
+      default_registry: {{ salt['pillar.get']('default_registry', '') }}
+      tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+    - onchanges:
+
 {% endmacro %}
 
 # Macro to register and de-register a container with elbs

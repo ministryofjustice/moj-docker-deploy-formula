@@ -25,7 +25,17 @@ include:
     - user: root
     - group: docker
     - mode: 750
-    
+
+# Systemd services
+/etc/systemd/system:
+  file.directory:
+    - mode: 755
+    - makedirs: True
+
+/usr/share/moj-docker-deploy:
+  file.directory:
+    - mode: 755
+    - makedirs: True
 
 {% for appname,appdata in pillar.get('docker_envs', {}).items() %}
 {% for cname,cdata in appdata.get('containers',{}).items() %}
