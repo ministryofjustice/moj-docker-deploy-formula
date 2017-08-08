@@ -12,6 +12,7 @@
 {% set docker_registry =  cdata.get('registry', default_registry) %}
 {% set container_full_name = (docker_registry, container_name) | select | join("/") %}
 {% set default_version = cdata.get('initial_version', 'latest') %}
+{% set container_deps = cdata.get('links', []) | selectattr("required") | list %}
 
 {{ container }}_pull:
   dockerng.image_present:
@@ -46,6 +47,13 @@
 {% if server_name %}
     - require_in:
       - file: /etc/nginx/conf.d/{{ server_name }}.conf
+{% endif %}
+{% if container_deps|length > 0 %}
+    - require:
+{% for c in container_deps %}
+      - file: /etc/init/{{c.link}}_container.conf
+      - service: {{c.link}}_container
+{% endfor %}
 {% endif %}
     - check_cmd:
         - sleep {{ cdata.get('initial_delay', 1)}} && docker inspect {{ container }}
