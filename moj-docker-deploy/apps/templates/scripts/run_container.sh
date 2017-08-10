@@ -168,6 +168,7 @@ case "$1" in
 		container_status
 		;;
 	*)
+		echo ERROR: main: called with unrecognised argument \'$*\', exiting
 		echo  "Usage: $ 0 {start | stop | reload | status}"
 		exit  1
 		;;
