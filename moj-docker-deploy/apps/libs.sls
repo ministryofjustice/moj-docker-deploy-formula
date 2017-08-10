@@ -70,6 +70,8 @@ reload_systemctl_unit_{{container}}:
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+    - require:
+      - file: /usr/share/moj-docker-deploy/run_container_{{container}}.sh
 
 /usr/share/moj-docker-deploy/run_container_{{container}}.sh:
   file.managed:
