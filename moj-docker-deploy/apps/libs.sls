@@ -86,7 +86,6 @@ reload_systemctl_unit_{{container}}:
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
-    - onchanges:
 
 {% endmacro %}
 
