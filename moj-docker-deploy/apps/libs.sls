@@ -1,9 +1,9 @@
 # Macro to pull and setup a service job for a container
-#  
+#
 # Args:
 #   container(string) - The name of the container
 #   cdata(dictionary) - The keyed setup data for the container
-#    
+#
 
 {% macro create_container_config(container, cdata, server_name=None) %}
 
@@ -34,6 +34,8 @@
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+    - require:
+      - file: /usr/share/moj-docker-deploy/run_container_{{container}}.sh
 
 {{container}}_service:
   service.running:
