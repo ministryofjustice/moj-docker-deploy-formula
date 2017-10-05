@@ -1,9 +1,9 @@
 # Macro to pull and setup a service job for a container
-#  
+#
 # Args:
 #   container(string) - The name of the container
 #   cdata(dictionary) - The keyed setup data for the container
-#    
+#
 
 {% macro create_container_config(container, cdata, server_name=None) %}
 
@@ -34,6 +34,8 @@
       cname: {{container}}
       default_registry: {{ salt['pillar.get']('default_registry', '') }}
       tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+    - require:
+      - file: /usr/share/moj-docker-deploy/run_container_{{container}}.sh
 
 {{container}}_service:
   service.running:
@@ -49,6 +51,43 @@
 {% endif %}
     - check_cmd:
         - sleep {{ cdata.get('initial_delay', 1)}} && docker inspect {{ container }}
+
+# Systemd services
+reload_systemctl_unit_{{container}}:
+  cmd.run:
+    - name:  command -v systemctl >/dev/null 2>&1 && systemctl daemon-reload
+    - onchanges:
+      - file: /etc/systemd/system/{{container}}_container.service
+
+/etc/systemd/system/{{container}}_container.service:
+  file.managed:
+    - user: root
+    - group: root
+    - mode: 644
+    - source: salt://moj-docker-deploy/apps/templates/systemd_container.conf
+    - template: jinja
+    - context: 
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
+      cname: {{container}}
+      default_registry: {{ salt['pillar.get']('default_registry', '') }}
+      tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
+    - require:
+      - file: /usr/share/moj-docker-deploy/run_container_{{container}}.sh
+
+/usr/share/moj-docker-deploy/run_container_{{container}}.sh:
+  file.managed:
+    - user: root
+    - group: root
+    - mode: 755
+    - source: salt://moj-docker-deploy/apps/templates/scripts/run_container.sh
+    - template: jinja
+    - context:
+      container_full_name: {{ container_full_name }}
+      cdata: {{cdata | yaml}}
+      cname: {{container}}
+      default_registry: {{ salt['pillar.get']('default_registry', '') }}
+      tag: '{{ salt['grains.get']('%s_tag' % container , default_version) | replace("'", "''") }}'
 
 {% endmacro %}
 
