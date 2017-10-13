@@ -748,9 +748,12 @@ def _get_client(timeout=None):
         client_kwargs = {}
         for key, val in (('base_url', 'docker.url'),
                          ('version', 'docker.version')):
-            param = __salt__['config.get'](val, NOTSET)
-            if param is not NOTSET:
+            try:
+              param = __salt__['config.get'](val, NOTSET)
+              if param is not NOTSET:
                 client_kwargs[key] = param
+            except NameError as e:
+              log.info("dockerng: salt module is not defined yet, skipping retrieving config settings")
 
         if 'base_url' not in client_kwargs and 'DOCKER_HOST' in os.environ:
             # Check if the DOCKER_HOST environment variable has been set
