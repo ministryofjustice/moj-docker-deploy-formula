@@ -1,3 +1,33 @@
+## v2.3.0
+
+Catch undefined __salt__ error
+Add missing require to upstart container config
+Improve run_container scripts output
+Remove extraneous onchanges condition
+Add require for systemd service on the service file
+Add support for systemd
+Update documentation to reflect ulimits support in in pillars.
+Enable ulimit opts on docker startup
+Support for ulimits in docker
+Fix weird tabs
+Fixing readme links
+Merge pull request #70 from ministryofjustice/minor-get-region-fix
+Import boto as needed by get_region function.
+Merge pull request #69 from ministryofjustice/bump-formula-requirements
+Bump formula requirements.
+Merge pull request #68 from ministryofjustice/hope-never-dies
+Sleep after start to fix race condition between docker/upstart
+Fix indentation and style.
+Docker inspect commands need || true to unbreak upstart jobs.
+Fix database endpoint environment variables documentation
+Backport fix preventing exception during dockerng.list_tags
+Fix elb_reg region argument defaults
+Enable multiregion support
+Bump docker-formulas as new docker version is now required.
+Salt 2014.7.x compatibility
+Backport dockerng states from newer salt.
+
+
 ## v2.1.6
 * Fix branchrunner docker env creation
 * Update branchrunner docs on dns lookup
